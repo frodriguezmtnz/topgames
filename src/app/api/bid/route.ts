@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { planBid } from "@/lib/gaming/bid";
-import { keyForUrl } from "@/lib/gaming/urls";
+import { isValidHttps, safeKeyForUrl } from "@/lib/gaming/urls";
 import { prisma } from "@/lib/db";
 import { applyPaidOrder } from "@/lib/pay/apply";
 import { signSuccessToken } from "@/lib/pay/successToken";
@@ -43,8 +43,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid bid." }, { status: 400 });
   }
 
+  if (!isValidHttps(rawUrl)) {
+    return NextResponse.json(
+      { error: "The URL is not valid (https:// or http://)." },
+      { status: 400 },
+    );
+  }
+
   const existing = rawUrl
-    ? await prisma.game.findUnique({ where: { key: keyForUrl(rawUrl) } })
+    ? (await prisma.game.findUnique({ where: { key: safeKeyForUrl(rawUrl) ?? "" } }))
     : null;
 
   const plan = planBid({

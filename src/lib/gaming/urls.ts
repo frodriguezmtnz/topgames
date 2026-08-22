@@ -14,6 +14,15 @@ export function keyForUrl(raw: string): string {
   return `${host}${path}`;
 }
 
+/** keyForUrl segura: devuelve la key canonica, o null si la URL no es valida. */
+export function safeKeyForUrl(raw: string): string | null {
+  try {
+    return keyForUrl(raw);
+  } catch {
+    return null;
+  }
+}
+
 /** Valida la URL de entrada y devuelve la URL canonica ya limpia. */
 export function cleanUrl(raw: string): { url: string; key: string } {
   const u = new URL(raw);
