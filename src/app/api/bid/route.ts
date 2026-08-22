@@ -79,7 +79,11 @@ export async function POST(req: NextRequest) {
     targetCents: String(plan.targetCents),
   };
 
-  const mock = process.env.PAYMENT_MOCK === "1" || !isLemonSqueezyConfigured();
+  // El modo mock NUNCA se activa en produccion: un fallo de config no debe
+  // permitir pujar gratis. En prod solo se permite el checkout real.
+  const mock =
+    process.env.NODE_ENV !== "production" &&
+    (process.env.PAYMENT_MOCK === "1" || !isLemonSqueezyConfigured());
   if (mock) {
     const applied = await applyPaidOrder(
       "mock",
@@ -97,11 +101,20 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const redirectUrl = await createCheckoutUrl({
-    custom,
-    description: "TopGames: una puja para poner tu juego en el ranking.",
-    successUrl: buildSuccessUrl(plan.key),
-  });
+  let redirectUrl: string;
+  try {
+    redirectUrl = await createCheckoutUrl({
+      custom,
+      description: "TopGames: una puja para poner tu juego en el ranking.",
+      successUrl: buildSuccessUrl(plan.key),
+    });
+  } catch (err) {
+    console.error("createCheckoutUrl", err);
+    return NextResponse.json(
+      { error: "No se pudo crear el pago. Revisa la configuracion de pagos." },
+      { status: 502 },
+    );
+  }
 
   return NextResponse.json({ redirectUrl });
 }

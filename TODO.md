@@ -7,15 +7,20 @@ motor de pujas y checkout/webhook con Lemon Squeezy (modo mock para local).
 
 ## 1. Pagos / cuenta (crítico, bloquea producción)
 
-- [ ] Decidir proveedor final: **Lemon Squeezy** vs **Paddle** vs Stripe.
-      Recomendación: LemonSqueezy o Paddle (merchant of record, alta sin papeleo).
-- [ ] Crear cuenta y dar de alta producto "Puja en TopGames" con pricing
-      **"Pay what you want"**, precio mínimo $5.
-- [ ] Configurar webhooks (URL: `/api/webhooks/lemonsqueezy`) con secreto.
-- [ ] Rellenar env vars: `LEMON_API_KEY`, `LEMON_STORE_ID`, `LEMON_VARIANT_ID`, `LEMON_WEBHOOK_SECRET`.
-- [ ] Poner `PAYMENT_MOCK=0` y probar un pago real de $5.
-- [ ] Si se elige Paddle: adaptar `src/lib/pay/lemonsqueezy.ts` (la tabla `Payment.provider`
-      ya está preparada para múltiples proveedores).
+- [x] Decidir proveedor final: **Lemon Squeezy** (elegido).
+- [x] Crear cuenta y dar de alta producto "Puja en TopGames" (producto con precio fijo €5,
+      variant Default). Para pujas variables se usa `custom_price` por API.
+- [ ] **Pendiente**: en el dashboard, cambiarlo a **"Pay what you want"** (precio min $5) si quieres
+      que el checkout muestre el precio editable. Con `custom_price` por API funciona igual.
+- [x] Configurar webhook (URL: `https://topvideogames.lol/api/webhooks/lemonsqueezy`) con secreto.
+- [x] Rellenar env vars: `LEMON_API_KEY`, `LEMON_STORE_ID=457587`, `LEMON_VARIANT_ID=2046359`, `LEMON_WEBHOOK_SECRET`.
+- [x] Probar creación de checkout real por `/api/bid` (devuelve URL de LS).
+- [ ] **Pendiente**: pago real de $5 de principio a fin (probarlo contra producción o local con `PAYMENT_MOCK=0`).
+- [ ] Si se elige Paddle al final: adaptar `src/lib/pay/lemonsqueezy.ts` (tabla `Payment.provider` lista).
+- [ ] **Seguridad (hacer tras validar el flujo):** rotar `LEMON_API_KEY` en Lemon Squeezy (se pegó por
+      chat en su día) y actualizarla en `.env` local + Vercel. Verificar que `.env.example` solo
+      contiene placeholders/valores inventados (`Store/Variant ID` falsos) y que `.env` real está
+      en `.gitignore`.
 
 ## 2. Fase 3 — Frontend del leaderboard
 
@@ -28,14 +33,17 @@ motor de pujas y checkout/webhook con Lemon Squeezy (modo mock para local).
 
 ## 3. Fase 4 — Deploy + dominio
 
-- [ ] Crear DB Postgres (Neon free o Vercel) y pegar su connection string en `DATABASE_URL` (.env y Vercel).
-- [ ] `npm run db:deploy` (o `prisma migrate deploy`) contra Neon para crear las tablas.
-- [ ] `npm run db:seed` contra Neon (poblara el ranking demo).
-- [ ] Cerrar los 4 valores de Lemon Squeezy en el dashboard y ponerlos en `.env`/Vercel.
-- [ ] Importar el repo en Vercel, setear env vars en produccion (`PAYMENT_MOCK=0`).
-- [ ] Comprar dominio (ej. `topgames.gg` / `.game` / `.lol`), configurar DNS + dominio en Vercel.
-- [ ] Configurar webhook en Lemon Squeezy → `/api/webhooks/lemonsqueezy`.
-- [ ] Probar pago real de $5.
+- [x] Crear DB Postgres (Neon) y apuntar `DATABASE_URL` (endpoint `-pooler`).
+- [x] `prisma migrate deploy` contra Neon (tablas creadas) + `db:seed` (ranking demo).
+- [x] Auto-descubrir Store/Variant ID por API (457587 / 2046359) y ponerlos en `.env`.
+- [x] Crear checkout real por `/api/bid` validado contra LS.
+- [x] Desplegar en Vercel (`https://topgames-pi.vercel.app`). Board/activity/home OK.
+- [x] Añadir `try/catch` a `/api/bid` para que los fallos de LS devuelvan JSON claro (no 500 en blanco).
+- [ ] **Pendiente**: pushear el fix del checkout (`daaa8dc` local → `origin/main`) para que Vercel
+      use el formato correcto (`checkout_data` como objeto con `custom_price` a nivel superior).
+- [ ] **Pendiente**: dominio `topvideogames.lol` al Vercel (DNS).
+- [ ] **Pendiente**: pago real de $5 y verificar webhook sube el puesto.
+- [ ] Comprobar `LICENSE_MOCK=0` y `APP_URL=https://topvideogames.lol` en Vercel (Production).
 
 ## 4. Robustez / seguridad (después del MVP)
 
