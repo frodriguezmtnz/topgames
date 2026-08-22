@@ -34,7 +34,7 @@ const rankColor = (rank: number) =>
 
 const rowClass = (rank: number) =>
   rank === 1
-    ? "border-emerald-500/70 bg-neutral-900/70 shadow-[0_0_18px_rgba(16,185,129,0.25)]"
+    ? "border-emerald-500/70 bg-neutral-900/70 shadow-[0_0_18px_rgba(16,185,129,0.25)] ring-2 ring-emerald-400/40 animate-pulse"
     : "border-neutral-800 bg-neutral-900/50";
 
 function steal(g: GameRow) {
@@ -68,6 +68,16 @@ export default function Leaderboard() {
           <span className={`w-8 text-center text-lg font-bold ${rankColor(g.rank)}`}>
             {g.rank === 1 ? "👑" : g.rank}
           </span>
+          {g.coverUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={g.coverUrl}
+              alt={g.name}
+              width={56}
+              height={42}
+              className="h-10 w-14 shrink-0 rounded object-cover"
+            />
+          ) : null}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <h3 className="truncate font-medium text-neutral-100">{g.name}</h3>

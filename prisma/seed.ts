@@ -1,4 +1,7 @@
-// Seeder: puebla el ranking con juegos demo para ver la web con "look" real.
+// Seeder de lanzamiento: RESETEA el board y siembra 2 juegos "comprados" reales
+// (Half-Life 2 €6, GTA V €5) para que la web se vea viva en produccion.
+// Precios bajos para que cualquiera pueda robar el puesto con poco (viral).
+// Ambos en Steam: la portada sale del header de la CDN, sin necesidad de RAWG.
 // Se ejecuta con: npm run db:seed
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -9,91 +12,40 @@ const adapter = new PrismaPg({
 });
 const prisma = new PrismaClient({ adapter });
 
-const demos = [
+const games = [
   {
-    key: "store.steampowered.com/app/2358720",
-    name: "The Last of Us Part I",
-    url: "https://store.steampowered.com/app/2358720/",
+    key: "store.steampowered.com/app/220/half-life_2",
+    name: "Half-Life 2",
+    url: "https://store.steampowered.com/app/220/Half-Life_2/",
     coverUrl:
-      "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2358720/header.jpg",
-    description: "Survival horror en un Estados Unidos post-pandemico.",
-    bidCents: 14018 * 100,
-    clicks: 7670,
+      "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/220/header.jpg",
+    description: "The FPS that redefined physics, storytelling and level design.",
+    bidCents: 600,
+    clicks: 214,
   },
   {
-    key: "balatrogame.com",
-    name: "Balatro",
-    url: "https://balatrogame.com",
-    description: "El roguelike de poker que lo peta todo.",
-    bidCents: 13005 * 100,
-    clicks: 8864,
-    coverUrl: undefined,
-  },
-  {
-    key: "store.steampowered.com/app/1145350",
-    name: "Hades II",
-    url: "https://store.steampowered.com/app/1145350/Hades_II/",
-    description: "Roguelike mitologico, ya en Early Access.",
-    bidCents: 12716 * 100,
-    clicks: 11688,
+    key: "store.steampowered.com/app/2715900/grand_theft_auto_v",
+    name: "Grand Theft Auto V",
+    url: "https://store.steampowered.com/app/2715900/Grand_Theft_Auto_V/",
     coverUrl:
-      "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1145350/header.jpg",
-  },
-  {
-    key: "celestegame.shop",
-    name: "Celeste",
-    url: "https://celestegame.shop",
-    description: "Plataformas de precision y autoaceptacion.",
-    bidCents: 2001 * 100,
-    clicks: 1260,
-    coverUrl: undefined,
-  },
-  {
-    key: "stardewvalley.net",
-    name: "Stardew Valley",
-    url: "https://www.stardewvalley.net",
-    description: "Tu granja, tus reglas.",
-    bidCents: 2000 * 100,
-    clicks: 2284,
-    coverUrl: undefined,
-  },
-  {
-    key: "minecraft.net",
-    name: "Minecraft",
-    url: "https://www.minecraft.net",
-    description: "El sandbox mas vendido del mundo.",
-    bidCents: 501 * 100,
-    clicks: 1255,
-    coverUrl: undefined,
-  },
-  {
-    key: "crossyroad.com",
-    name: "Crossy Road",
-    url: "https://crossyroad.com",
-    description: "Atraviesa. Cruzando. Te atropellan.",
-    bidCents: 500 * 100,
-    clicks: 42,
-    coverUrl: undefined,
+      "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2715900/header.jpg",
+    description: "Los Santos is waiting. The open-world crime sandbox of a decade.",
+    bidCents: 500,
+    clicks: 156,
   },
 ];
 
 async function main() {
+  // Borra todo el board (deleteMany cascade a payments) y siembra los 2 juegos.
+  const deleted = await prisma.game.deleteMany();
   const wins = await Promise.all(
-    demos.map((d) =>
-      prisma.game.upsert({
-        where: { key: d.key },
-        update: {
-          name: d.name,
-          url: d.url,
-          coverUrl: d.coverUrl,
-          description: d.description,
-          bidCents: d.bidCents,
-        },
-        create: d,
+    games.map((g) =>
+      prisma.game.create({
+        data: g,
       }),
     ),
   );
-  console.log(`Seed ok: ${wins.length} juegos en el ranking.`);
+  console.log(`Seed ok: borrados ${deleted.count} juegos, insertados ${wins.length}.`);
 }
 
 main()
