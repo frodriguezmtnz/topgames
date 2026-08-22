@@ -61,7 +61,7 @@ export default function Leaderboard() {
   return (
     <div className="flex flex-col gap-3">
       {data.games.map((g) => (
-        <div key={g.rank} className={`flex items-center gap-4 rounded-xl border ${rowClass(g.rank)}`}>
+        <div key={g.rank} className={`flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border ${rowClass(g.rank)}`}>
           {g.rank === 1 && (
             <span
               aria-hidden="true"
@@ -83,14 +83,14 @@ export default function Leaderboard() {
           ) : null}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h3 className={`truncate text-neutral-100 ${g.rank === 1 ? "text-lg font-semibold" : "font-medium"}`}>
+              <h3 className={`line-clamp-2 text-neutral-100 ${g.rank === 1 ? "text-lg font-semibold" : "font-medium"}`}>
                 {g.name}
               </h3>
               <a
                 href={`/api/r/${encodeURIComponent(g.key)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="truncate text-xs text-neutral-500 hover:text-neutral-300"
+                className="hidden shrink-0 text-xs text-neutral-500 hover:text-neutral-300 sm:inline"
               >
                 {hostnameOf(g.url)}
               </a>
@@ -102,7 +102,7 @@ export default function Leaderboard() {
               {g.clicks.toLocaleString()} visits
             </p>
           </div>
-          <div className="flex shrink-0 flex-col items-end gap-1">
+          <div className="flex w-full items-center justify-between gap-1 sm:w-auto sm:shrink-0 sm:flex-col sm:items-end sm:gap-1">
             <span className={`font-semibold text-neutral-100 ${g.rank === 1 ? "text-xl" : "text-sm"}`}>
               {formatMoney(g.bidCents)}
             </span>
