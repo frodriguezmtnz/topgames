@@ -24,11 +24,11 @@ const games = [
     clicks: 214,
   },
   {
-    key: "store.steampowered.com/app/2715900/grand_theft_auto_v",
-    name: "Grand Theft Auto V",
-    url: "https://store.steampowered.com/app/2715900/Grand_Theft_Auto_V/",
+    key: "store.steampowered.com/app/3240220/grand_theft_auto_v",
+    name: "Grand Theft Auto V Enhanced",
+    url: "https://store.steampowered.com/app/3240220/Grand_Theft_Auto_V_Enhanced/",
     coverUrl:
-      "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2715900/header.jpg",
+      "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3240220/header.jpg",
     description: "Los Santos is waiting. The open-world crime sandbox of a decade.",
     bidCents: 500,
     clicks: 156,
