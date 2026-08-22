@@ -26,11 +26,11 @@ export default function RulesPage() {
           </h2>
           <ul className="list-inside list-disc space-y-2 text-neutral-400">
             <li>
-              New listings use whole dollars, minimum $5, maximum $999,999. Existing
+              New listings use whole euros, minimum €5, maximum €999,999. Existing
               bids keep their amount until they raise it or get outbid.
             </li>
             <li>
-              Taking the #1 spot costs at least $5 more than the current top bid.
+              Taking the #1 spot costs at least €5 more than the current top bid.
               Paying less still places you on the board at whatever spot your bid can
               buy.
             </li>

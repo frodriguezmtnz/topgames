@@ -97,7 +97,7 @@ export default function BidForm() {
         </label>
       </div>
       <label className="flex flex-col gap-1.5 text-sm text-neutral-400">
-        Your bid (USD)
+        Your bid (EUR)
         <input
           type="number"
           min={5}
@@ -110,7 +110,7 @@ export default function BidForm() {
           className="rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-neutral-100 outline-none focus:border-emerald-500"
         />
         <span className="text-xs text-neutral-500">
-          Minimum $5. Paying less than the #1 still puts you on the board.
+          Minimum €5. Paying less than the #1 still puts you on the board.
         </span>
       </label>
       {error && <p className="text-sm text-red-400">{error}</p>}

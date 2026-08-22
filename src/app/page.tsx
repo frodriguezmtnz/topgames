@@ -57,7 +57,7 @@ export default async function Home() {
           game. No juries. No algorithms. Just a bid.
         </p>
         <p className="mt-4 inline-block rounded-full border border-neutral-800 bg-neutral-900/60 px-4 py-1 text-xs text-neutral-500">
-          New listings start at $5. Paying less than the top still puts you on the
+          New listings start at €5. Paying less than the top still puts you on the
           board — right where your bid can buy.
         </p>
       </section>

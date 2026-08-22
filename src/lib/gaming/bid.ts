@@ -77,10 +77,10 @@ export function planBid(args: {
 
   const bidCents = args.bidDollars * 100;
   if (!Number.isInteger(bidCents) || bidCents % 100 !== 0) {
-    return { ok: false, error: "Bids must be in whole dollars." };
+    return { ok: false, error: "Bids must be in whole euros." };
   }
   if (bidCents < MIN_BID_CENTS || bidCents > MAX_BID_CENTS) {
-    return { ok: false, error: "Bids must be between $5 and $999,999." };
+    return { ok: false, error: "Bids must be between €5 and €999,999." };
   }
 
   const existing = args.existingBidCents ?? 0;
