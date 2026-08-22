@@ -6,32 +6,45 @@ import type { BidCustomData } from "@/lib/pay/types";
 export const runtime = "nodejs";
 
 function extractCustom(attributes: Record<string, unknown> | undefined): BidCustomData | null {
-  const candidates = [
+  const firstOrderItem = attributes?.first_order_item;
+  const itemAttrs =
+    firstOrderItem && typeof firstOrderItem === "object"
+      ? (firstOrderItem as Record<string, unknown>)
+      : {};
+
+  const candidateContainers = [
     attributes?.custom,
     attributes?.checkout_data,
     attributes?.meta_data,
     attributes?.custom_meta,
+    itemAttrs.custom,
+    itemAttrs.checkout_data,
+    itemAttrs.meta_data,
   ] as unknown[];
 
-  for (const c of candidates) {
+  for (const c of candidateContainers) {
     if (c && typeof c === "object" && !Array.isArray(c)) {
       const obj = c as Record<string, unknown>;
-      const rawTarget = obj.key && obj.url && obj.name
-        ? (obj.targetCents as unknown)
+      // Le desanida tanto el custom directo como checkout_data.custom
+      const inner = (typeof obj.custom === "object" && obj.custom !== null
+        ? (obj.custom as Record<string, unknown>)
+        : obj) as Record<string, unknown>;
+      const rawTarget = inner.key && inner.url && inner.name
+        ? (inner.targetCents as unknown)
         : null;
       if (
-        typeof obj.key === "string" &&
-        typeof obj.url === "string" &&
-        typeof obj.name === "string" &&
+        typeof inner.key === "string" &&
+        typeof inner.url === "string" &&
+        typeof inner.name === "string" &&
         (typeof rawTarget === "string" || typeof rawTarget === "number")
       ) {
         return {
-          key: obj.key,
-          url: obj.url,
-          name: obj.name,
+          key: inner.key,
+          url: inner.url,
+          name: inner.name,
           description:
-            typeof obj.gameDescription === "string" ? obj.gameDescription : null,
-          coverUrl: typeof obj.gameCover === "string" ? obj.gameCover : null,
+            typeof inner.gameDescription === "string" ? inner.gameDescription : null,
+          coverUrl: typeof inner.gameCover === "string" ? inner.gameCover : null,
           targetCents: String(rawTarget),
         };
       }

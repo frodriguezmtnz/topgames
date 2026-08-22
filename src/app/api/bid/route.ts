@@ -3,6 +3,7 @@ import { planBid } from "@/lib/gaming/bid";
 import { keyForUrl } from "@/lib/gaming/urls";
 import { prisma } from "@/lib/db";
 import { applyPaidOrder } from "@/lib/pay/apply";
+import { signSuccessToken } from "@/lib/pay/successToken";
 import {
   buildSuccessUrl,
   createCheckoutUrl,
@@ -79,6 +80,10 @@ export async function POST(req: NextRequest) {
     targetCents: String(plan.targetCents),
   };
 
+  // successToken valida la autenticidad del pago: solo la URL generada tras el
+  // checkout (firmada por el servidor) puede mostrar el exito. Evita falsos /success.
+  const successUrl = `${buildSuccessUrl(plan.key)}&t=${signSuccessToken(plan.key)}`;
+
   // El modo mock NUNCA se activa en produccion: un fallo de config no debe
   // permitir pujar gratis. En prod solo se permite el checkout real.
   const mock =
@@ -95,7 +100,7 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({
       mock: true,
-      redirectUrl: buildSuccessUrl(plan.key),
+      redirectUrl: successUrl,
       rankAppliedFor: applied.game.bidCents,
       orderId: applied.payment.providerPaymentId,
     });
@@ -106,7 +111,7 @@ export async function POST(req: NextRequest) {
     redirectUrl = await createCheckoutUrl({
       custom,
       description: "TopGames: una puja para poner tu juego en el ranking.",
-      successUrl: buildSuccessUrl(plan.key),
+      successUrl,
     });
   } catch (err) {
     console.error("createCheckoutUrl", err);
