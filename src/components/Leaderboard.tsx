@@ -34,8 +34,8 @@ const rankColor = (rank: number) =>
 
 const rowClass = (rank: number) =>
   rank === 1
-    ? "border-emerald-500/70 bg-neutral-900/70 shadow-[0_0_18px_rgba(16,185,129,0.25)] ring-2 ring-emerald-400/40 animate-pulse"
-    : "border-neutral-800 bg-neutral-900/50";
+    ? "relative z-10 scale-[1.02] border-emerald-400/80 bg-neutral-900/70 p-5 shadow-[0_0_24px_rgba(16,185,129,0.35)] ring-2 ring-emerald-400/50 sm:scale-[1.04]"
+    : "border-neutral-800 bg-neutral-900/50 p-4";
 
 function steal(g: GameRow) {
   window.dispatchEvent(
@@ -61,11 +61,14 @@ export default function Leaderboard() {
   return (
     <div className="flex flex-col gap-3">
       {data.games.map((g) => (
-        <div
-          key={g.rank}
-          className={`flex items-center gap-4 rounded-xl border p-4 ${rowClass(g.rank)}`}
-        >
-          <span className={`w-8 text-center text-lg font-bold ${rankColor(g.rank)}`}>
+        <div key={g.rank} className={`flex items-center gap-4 rounded-xl border ${rowClass(g.rank)}`}>
+          {g.rank === 1 && (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 -z-10 animate-ping rounded-xl border-2 border-emerald-400/60"
+            />
+          )}
+          <span className={`w-8 text-center font-bold ${rankColor(g.rank)} ${g.rank === 1 ? "text-2xl" : "text-lg"}`}>
             {g.rank === 1 ? "👑" : g.rank}
           </span>
           {g.coverUrl ? (
@@ -73,14 +76,16 @@ export default function Leaderboard() {
             <img
               src={g.coverUrl}
               alt={g.name}
-              width={56}
-              height={42}
-              className="h-10 w-14 shrink-0 rounded object-cover"
+              width={64}
+              height={48}
+              className={`shrink-0 rounded object-cover ${g.rank === 1 ? "h-12 w-16" : "h-10 w-14"}`}
             />
           ) : null}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="truncate font-medium text-neutral-100">{g.name}</h3>
+              <h3 className={`truncate text-neutral-100 ${g.rank === 1 ? "text-lg font-semibold" : "font-medium"}`}>
+                {g.name}
+              </h3>
               <a
                 href={`/api/r/${encodeURIComponent(g.key)}`}
                 target="_blank"
@@ -98,7 +103,7 @@ export default function Leaderboard() {
             </p>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-1">
-            <span className="text-sm font-semibold text-neutral-100">
+            <span className={`font-semibold text-neutral-100 ${g.rank === 1 ? "text-xl" : "text-sm"}`}>
               {formatMoney(g.bidCents)}
             </span>
             <div className="flex items-center gap-1.5">
