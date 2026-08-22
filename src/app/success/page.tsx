@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { verifySuccessToken } from "@/lib/pay/successToken";
 
-export const metadata = { title: "Pago completado" };
+export const metadata = { title: "Payment received" };
 
 export const dynamic = "force-dynamic";
 
@@ -46,15 +46,15 @@ export default async function SuccessPage(props: {
     // Pago test/real procesandose: no mostramos exito hasta confirmar por webhook.
     return (
       <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 px-6 text-center">
-        <h1 className="text-2xl font-bold">Procesando tu pago…</h1>
+        <h1 className="text-2xl font-bold">Processing your payment…</h1>
         <p className="text-sm text-neutral-500">
-          Estamos confirmando tu puja. Suéltalo un momento y refresca.
+          We&apos;re confirming your bid. Give it a moment and refresh.
         </p>
         <Link
           href="/"
           className="rounded-full border border-neutral-700 px-4 py-1.5 text-sm"
         >
-          Volver al ranking
+          Back to the ranking
         </Link>
       </main>
     );
@@ -62,20 +62,22 @@ export default async function SuccessPage(props: {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 px-6 text-center">
-      <h1 className="text-2xl font-bold">Pago recibido</h1>
+      <h1 className="text-2xl font-bold">Payment received</h1>
       {rank ? <p className="text-5xl font-black text-emerald-400">#{rank}</p> : null}
       <p className="text-sm text-neutral-500">
-        {gameName} ya está en el ranking.
-        {rank ? ` Está en el puesto #${rank}.` : ""}
+        {gameName} is on the leaderboard.
+        {rank ? ` It ranks #${rank}.` : ""}
       </p>
       {mocked === "1" && (
-        <p className="text-xs text-amber-500">(modo demo: pago simulado en local)</p>
+        <p className="text-xs text-amber-500">
+          (demo mode: simulated payment, no charge)
+        </p>
       )}
       <Link
         href="/"
         className="rounded-full border border-neutral-700 px-4 py-1.5 text-sm"
       >
-        Ver ranking
+        View the ranking
       </Link>
     </main>
   );

@@ -25,11 +25,11 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 const rankColor = (rank: number) =>
   rank === 1
-    ? "text-amber-300"
+    ? "text-amber-500"
     : rank === 2
-      ? "text-zinc-300"
+      ? "text-zinc-400"
       : rank === 3
-        ? "text-orange-300"
+        ? "text-orange-500"
         : "text-neutral-500";
 
 export default function Leaderboard() {
@@ -37,8 +37,8 @@ export default function Leaderboard() {
     refreshInterval: 10_000,
   });
 
-  if (error) return <p className="text-sm text-neutral-500">No se pudo cargar el ranking.</p>;
-  if (!data) return <p className="text-sm text-neutral-500">Cargando ranking…</p>;
+  if (error) return <p className="text-sm text-neutral-500">Could not load the ranking.</p>;
+  if (!data) return <p className="text-sm text-neutral-500">Loading ranking…</p>;
 
   return (
     <div className="flex flex-col gap-3">
@@ -54,7 +54,7 @@ export default function Leaderboard() {
             <div className="flex items-center gap-2">
               <h3 className="truncate font-medium text-neutral-100">{g.name}</h3>
               <a
-                href={g.url}
+                href={`/api/r/${encodeURIComponent(g.key)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="truncate text-xs text-neutral-500 hover:text-neutral-300"

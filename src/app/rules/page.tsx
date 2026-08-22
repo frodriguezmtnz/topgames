@@ -6,7 +6,7 @@ export default function RulesPage() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-8 px-6 py-12">
       <nav className="text-sm text-neutral-400">
-        <Link href="/" className="hover:text-neutral-200">topgames</Link>
+        <Link href="/" className="hover:text-neutral-200">topvideogames.lol</Link>
         <span className="mx-2 text-neutral-700">·</span>
         <Link href="/about" className="hover:text-neutral-200">About</Link>
       </nav>
@@ -14,61 +14,74 @@ export default function RulesPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Rules</h1>
         <p className="mt-2 text-neutral-400">
-          TopGames es un leaderboard público. No hay ads, ni API keys, ni revenue share.
-          Pagas para estar por encima de los demás. El puesto es la puja — nada más.
+          topvideogames.lol is a public leaderboard. No ads, no API keys, no revenue
+          share. You pay to rank above others. Your bid is your rank — nothing else.
         </p>
       </div>
 
       <section className="flex flex-col gap-6">
         <div>
-          <h2 className="mb-2 text-lg font-semibold text-neutral-200">Cómo funciona el ranking</h2>
+          <h2 className="mb-2 text-lg font-semibold text-neutral-200">
+            How the ranking works
+          </h2>
           <ul className="list-inside list-disc space-y-2 text-neutral-400">
             <li>
-              Nuevas entradas en dólares enteros, mínimo $5, máximo $999,999. Las pujas ya en
-              el board mantienen su importe hasta que suben o las superan.
+              New listings use whole dollars, minimum $5, maximum $999,999. Existing
+              bids keep their amount until they raise it or get outbid.
             </li>
             <li>
-              Quitar el #1 cuesta al menos $5 más que la puja top actual. Pagar menos igual
-              te coloca en el board en el lugar que tu bid pueda comprar.
+              Taking the #1 spot costs at least $5 more than the current top bid.
+              Paying less still places you on the board at whatever spot your bid can
+              buy.
             </li>
             <li>
-              Pujas empatadas se ordenan por antigüedad: la puja más vieja queda más arriba.
+              Tied bids are ordered by age: the older bid ranks higher.
             </li>
             <li>
-              Entrar la misma URL de nuevo sirve para subir de puesto; solo pagas la diferencia,
-              y nadie puede quitarte el puesto pagando esa diferencia.
+              Listing the same URL again lets you raise your bid — you only pay the
+              difference, and nobody can take your spot by paying that same difference.
             </li>
             <li>
-              Links de Steam, itch.io y similares se identifican por su ruta, así que juegos
-              distintos no comparten puja. Los query params de tracking se ignoran.
+              Steam, itch.io and similar links are identified by their path, so
+              different games never share a bid. Tracking query params are ignored.
             </li>
           </ul>
         </div>
 
         <div>
-          <h2 className="mb-2 text-lg font-semibold text-neutral-200">Qué puedes listar</h2>
+          <h2 className="mb-2 text-lg font-semibold text-neutral-200">
+            What you can list
+          </h2>
           <ul className="list-inside list-disc space-y-2 text-neutral-400">
-            <li>Un juego en Steam, Game Pass, itch.io, tu web o cualquier página de juego.</li>
+            <li>A game on Steam, Game Pass, itch.io, your own site or any game page.</li>
             <li>
-              Links de invitación a chats no se permiten — Discord, WhatsApp, Telegram, etc.
+              Invite links to chats are not allowed — Discord, WhatsApp, Telegram, etc.
             </li>
-            <li>Nada de contenido sexual/NSFW. Si es porn o plataforma adulta, no va en el board.</li>
-            <li>Los parámetros de consulta se quitan de los links de listado.</li>
-            <li>Link shorteners no están permitidos; se reemplazan por su destino final.</li>
+            <li>
+              No sexually explicit content. If it&apos;s porn or an adult platform, it
+              doesn&apos;t make the board.
+            </li>
+            <li>Query params are stripped from listed links.</li>
+            <li>URL shorteners are not allowed; they get replaced by their final destination.</li>
           </ul>
         </div>
 
         <div>
-          <h2 className="mb-2 text-lg font-semibold text-neutral-200">Después de pagar</h2>
+          <h2 className="mb-2 text-lg font-semibold text-neutral-200">
+            After you pay
+          </h2>
           <ul className="list-inside list-disc space-y-2 text-neutral-400">
-            <li>Tu juego es público y los clicks van a la URL que enviaste, sin query params.</li>
-            <li>Un pago completado es lo que reclama el puesto.</li>
+            <li>
+              Your game is public and clicks go to the URL you submitted, stripped of
+              query params.
+            </li>
+            <li>A completed payment is what claims the spot.</li>
           </ul>
         </div>
       </section>
 
       <footer className="text-xs text-neutral-600">
-        <Link href="/" className="hover:text-neutral-300">← volver al ranking</Link>
+        <Link href="/" className="hover:text-neutral-300">← back to the ranking</Link>
       </footer>
     </main>
   );

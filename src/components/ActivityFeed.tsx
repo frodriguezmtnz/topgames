@@ -25,7 +25,7 @@ export default function ActivityFeed() {
 
   return (
     <section className="mx-auto w-full max-w-2xl">
-      <h2 className="mb-3 text-lg font-semibold text-neutral-200">Actividad reciente</h2>
+      <h2 className="mb-3 text-lg font-semibold text-neutral-200">Recent activity</h2>
       <div className="flex flex-col gap-2">
         {data.activity.map((a, i) => (
           <div
@@ -35,7 +35,8 @@ export default function ActivityFeed() {
             <span className="font-medium text-neutral-200">{a.gameName}</span>
             <span className="text-neutral-600">{hostnameOf(a.gameUrl)}</span>
             <span className="ml-auto text-xs text-neutral-500">
-              {a.kind === "raise" ? "↑" : "+"} {formatMoney(a.amountCents)} · {timeAgo(a.createdAt)}
+              {a.kind === "raise" ? "↑" : "+"} {formatMoney(a.amountCents)} ·{" "}
+              {timeAgo(a.createdAt)}
             </span>
           </div>
         ))}

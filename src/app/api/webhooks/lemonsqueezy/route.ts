@@ -61,10 +61,10 @@ export async function POST(req: NextRequest) {
   if (!mock) {
     const sig = req.headers.get("x-signature");
     if (!secret) {
-      return NextResponse.json({ error: "Webhook secret no configurado." }, { status: 500 });
+      return NextResponse.json({ error: "Webhook secret not configured." }, { status: 500 });
     }
     if (!verifyWebhook(secret, raw, sig)) {
-      return NextResponse.json({ error: "Firma invalida." }, { status: 401 });
+      return NextResponse.json({ error: "Invalid signature." }, { status: 401 });
     }
   }
 
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
   try {
     payload = JSON.parse(raw);
   } catch {
-    return NextResponse.json({ error: "JSON invalido." }, { status: 400 });
+    return NextResponse.json({ error: "Invalid JSON." }, { status: 400 });
   }
 
   const eventName = payload.meta?.event_name ?? "";

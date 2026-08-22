@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   if (!allowed(ip)) {
     return NextResponse.json(
-      { error: "Demasiadas solicitudes. Vuelve en un minuto." },
+      { error: "Too many requests. Try again in a minute." },
       { status: 429 },
     );
   }
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "JSON invalido." }, { status: 400 });
+    return NextResponse.json({ error: "Invalid JSON." }, { status: 400 });
   }
 
   const rawUrl = typeof body.url === "string" ? body.url.trim() : "";
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
   const coverUrl = typeof body.coverUrl === "string" ? body.coverUrl : null;
 
   if (!Number.isFinite(bidDollars)) {
-    return NextResponse.json({ error: "Puja invalida." }, { status: 400 });
+    return NextResponse.json({ error: "Invalid bid." }, { status: 400 });
   }
 
   const existing = rawUrl
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
       custom,
     );
     if (!applied) {
-      return NextResponse.json({ error: "No se pudo aplicar la puja." }, { status: 500 });
+      return NextResponse.json({ error: "Could not apply your bid." }, { status: 500 });
     }
     return NextResponse.json({
       mock: true,
@@ -110,13 +110,13 @@ export async function POST(req: NextRequest) {
   try {
     redirectUrl = await createCheckoutUrl({
       custom,
-      description: "TopGames: una puja para poner tu juego en el ranking.",
+      description: "topvideogames.lol: a bid to put your game on the leaderboard.",
       successUrl,
     });
   } catch (err) {
     console.error("createCheckoutUrl", err);
     return NextResponse.json(
-      { error: "No se pudo crear el pago. Revisa la configuracion de pagos." },
+      { error: "Could not create the payment. Check payment settings." },
       { status: 502 },
     );
   }

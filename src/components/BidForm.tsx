@@ -25,12 +25,12 @@ export default function BidForm() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Error al procesar la puja.");
+        setError(data.error ?? "Something went wrong processing your bid.");
         return;
       }
       window.location.href = data.redirectUrl;
     } catch {
-      setError("No se pudo conectar. Inténtalo de nuevo.");
+      setError("Could not connect. Try again.");
     } finally {
       setLoading(false);
     }
@@ -43,7 +43,7 @@ export default function BidForm() {
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1.5 text-sm text-neutral-400">
-          URL del juego
+          Game URL
           <input
             type="url"
             required
@@ -54,18 +54,18 @@ export default function BidForm() {
           />
         </label>
         <label className="flex flex-col gap-1.5 text-sm text-neutral-400">
-          Nombre (opcional)
+          Name (optional)
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Nombre del juego"
+            placeholder="Game name"
             className="rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-neutral-100 outline-none focus:border-neutral-400"
           />
         </label>
       </div>
       <label className="flex flex-col gap-1.5 text-sm text-neutral-400">
-        Tu puja (USD)
+        Your bid (USD)
         <input
           type="number"
           min={5}
@@ -78,7 +78,7 @@ export default function BidForm() {
           className="rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-neutral-100 outline-none focus:border-neutral-400"
         />
         <span className="text-xs text-neutral-500">
-          Mínimo $5. Pagar menos que el #1 igual te coloca en el board.
+          Minimum $5. Paying less than the #1 still puts you on the board.
         </span>
       </label>
       {error && <p className="text-sm text-red-400">{error}</p>}
@@ -87,7 +87,7 @@ export default function BidForm() {
         disabled={loading}
         className="rounded-full bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {loading ? "Procesando…" : "Outbid ↗"}
+        {loading ? "Processing…" : "Outbid ↗"}
       </button>
     </form>
   );
