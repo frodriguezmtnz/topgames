@@ -69,8 +69,6 @@ export default async function Home() {
         </p>
       </section>
 
-      <ActivityFeed />
-
       <section>
         <div className="mb-3 flex items-end justify-between">
           <h2 className="text-lg font-semibold text-neutral-200">Leaderboard</h2>
@@ -78,6 +76,8 @@ export default async function Home() {
         </div>
         <Leaderboard />
       </section>
+
+      <ActivityFeed />
 
       <footer className="mt-8 flex flex-wrap flex-col items-center justify-center gap-2 border-t border-neutral-800 pt-6 text-center text-xs text-neutral-500">
         <p>

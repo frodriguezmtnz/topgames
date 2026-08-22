@@ -25,12 +25,17 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 const rankColor = (rank: number) =>
   rank === 1
-    ? "text-amber-500"
+    ? "text-emerald-400"
     : rank === 2
       ? "text-zinc-400"
       : rank === 3
         ? "text-orange-500"
         : "text-neutral-500";
+
+const rowClass = (rank: number) =>
+  rank === 1
+    ? "border-emerald-500/70 bg-neutral-900/70 shadow-[0_0_18px_rgba(16,185,129,0.25)]"
+    : "border-neutral-800 bg-neutral-900/50";
 
 export default function Leaderboard() {
   const { data, error } = useSWR<BoardResponse>("/api/board", fetcher, {
@@ -45,10 +50,10 @@ export default function Leaderboard() {
       {data.games.map((g) => (
         <div
           key={g.rank}
-          className="flex items-center gap-4 rounded-xl border border-neutral-800 bg-neutral-900/50 p-4"
+          className={`flex items-center gap-4 rounded-xl border p-4 ${rowClass(g.rank)}`}
         >
           <span className={`w-8 text-center text-lg font-bold ${rankColor(g.rank)}`}>
-            {g.rank}
+            {g.rank === 1 ? "👑" : g.rank}
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">

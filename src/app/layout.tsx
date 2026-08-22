@@ -44,12 +44,27 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-neutral-950 text-neutral-100">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <header className="mx-auto flex w-full max-w-3xl items-center justify-between px-5 pt-6 text-sm">
-          <Link href="/" className="font-semibold text-neutral-200 hover:text-neutral-100">
+          <Link href="/" className="flex items-center gap-1.5 font-semibold text-neutral-200 hover:text-neutral-100">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 64 64"
+              fill="none"
+              aria-hidden="true"
+              className="shrink-0"
+            >
+              <rect width="64" height="64" rx="14" fill="#0a0a0a" />
+              <rect x="8" y="20" width="48" height="26" rx="13" fill="#171717" stroke="#34d399" strokeWidth="3" />
+              <path d="M20 28v8M16 32h8" stroke="#fafafa" strokeWidth="3" strokeLinecap="round" />
+              <circle cx="42" cy="30" r="2.2" fill="#fafafa" />
+              <circle cx="48" cy="34" r="2.2" fill="#fafafa" />
+            </svg>
             topvideogames<span className="text-emerald-500">.</span>lol
           </Link>
           <nav className="flex items-center gap-5 text-neutral-400">
