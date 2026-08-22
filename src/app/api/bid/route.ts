@@ -4,27 +4,16 @@ import { keyForUrl } from "@/lib/gaming/urls";
 import { prisma } from "@/lib/db";
 import { applyPaidOrder } from "@/lib/pay/apply";
 import { signSuccessToken } from "@/lib/pay/successToken";
+import { rateLimit } from "@/lib/ratelimit";
 import {
   buildSuccessUrl,
   createCheckoutUrl,
   isLemonSqueezyConfigured,
 } from "@/lib/pay/lemonsqueezy";
 
-const rateWindowMs = 60_000;
-const maxAttempts = 6;
-const hits = new Map<string, number[]>();
-
-function allowed(ip: string): boolean {
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => t > now - rateWindowMs);
-  recent.push(now);
-  hits.set(ip, recent);
-  return recent.length <= maxAttempts;
-}
-
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (!allowed(ip)) {
+  if (!(await rateLimit(ip))) {
     return NextResponse.json(
       { error: "Too many requests. Try again in a minute." },
       { status: 429 },

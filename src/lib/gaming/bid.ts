@@ -1,8 +1,10 @@
 import {
   BLOCKED_HOSTS,
+  BLOCKED_SHORTENERS,
   BLOCKED_TLDS,
   MAX_BID_CENTS,
   MIN_BID_CENTS,
+  NSFW_KEYWORDS,
 } from "./constants";
 import { cleanUrl, isValidHttps } from "./urls";
 
@@ -22,16 +24,36 @@ export type BidPlanErr = { ok: false; error: string };
 
 export type BidPlan = BidPlanOk | BidPlanErr;
 
+/** Hosts/IPs reservadas o de loopback (anti-SSRF): no se permiten en el board. */
+function isReservedHost(host: string): boolean {
+  const h = host.toLowerCase();
+  if (h === "localhost" || h.endsWith(".localhost") || h.endsWith(".local")) return true;
+  if (/^127\./.test(h) || /^10\./.test(h) || /^169\.254\./.test(h) || /^192\.168\./.test(h)) return true;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(h)) return true;
+  if (/^0\.0\.0\.0$/.test(h)) return true;
+  if (h.startsWith("[") && /^\[::/.test(h)) return true;
+  return false;
+}
+
+/** Keywords NSFW en hostname o subdominio. */
+function hasNsfwHost(host: string): boolean {
+  return NSFW_KEYWORDS.some((k) => host.includes(k));
+}
+
 export function blockedReason(rawUrl: string): string | null {
   try {
     const u = new URL(rawUrl);
     const host = u.hostname.replace(/^www\./, "").toLowerCase();
     const tld = host.split(".").pop() ?? "";
-    if (BLOCKED_TLDS.includes(tld)) return "dominio no permitido";
+    if (BLOCKED_TLDS.includes(tld)) return "blocked";
+    if (isReservedHost(host)) return "blocked";
+    if (BLOCKED_SHORTENERS.some((s) => host === s || host.endsWith("." + s))) return "shortener";
     const blocked = BLOCKED_HOSTS.some(
       (h) => host === h || host.endsWith("." + h),
     );
-    return blocked ? "dominio no permitido" : null;
+    if (blocked) return "blocked";
+    if (hasNsfwHost(host)) return "nsfw";
+    return null;
   } catch {
     return null;
   }

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { computeNewBid } from "./bidMath";
 import type { BidCustomData } from "./types";
 
 /**
@@ -13,7 +14,7 @@ export async function applyPaidOrder(provider: string, providerPaymentId: string
 
   return prisma.$transaction(async (tx) => {
     const existing = await tx.game.findUnique({ where: { key: custom.key } });
-    const newBid = Math.max(existing?.bidCents ?? 0, target);
+    const newBid = computeNewBid(existing?.bidCents, target);
 
     const game = await tx.game.upsert({
       where: { key: custom.key },

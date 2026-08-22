@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { planBid } from "@/lib/gaming/bid";
+import { blockedReason, planBid } from "@/lib/gaming/bid";
 import { keyForUrl } from "@/lib/gaming/urls";
 
 describe("planBid", () => {
@@ -72,5 +72,42 @@ describe("keyForUrl", () => {
     expect(keyForUrl("https://store.steampowered.com/app/1")).not.toBe(
       keyForUrl("https://store.steampowered.com/app/2"),
     );
+  });
+});
+
+describe("blockedReason (moderacion + anti-SSRF)", () => {
+  it("permite un juego normal de Steam", () => {
+    expect(blockedReason("https://store.steampowered.com/app/123/Game/")).toBeNull();
+  });
+
+  it("bloquea chats (Discord, Telegram, WhatsApp)", () => {
+    expect(blockedReason("https://discord.gg/abc")).toBe("blocked");
+    expect(blockedReason("https://t.me/canal")).toBe("blocked");
+    expect(blockedReason("https://wa.me/342")).toBe("blocked");
+  });
+
+  it("bloquea dominios adultos", () => {
+    expect(blockedReason("https://onlyfans.com/user")).toBe("blocked");
+    expect(blockedReason("https://xhamster.com/x")).toBe("blocked");
+  });
+
+  it("bloquea shorteners", () => {
+    expect(blockedReason("https://bit.ly/abc")).toBe("shortener");
+    expect(blockedReason("https://t.co/game")).toBe("shortener");
+  });
+
+  it("bloquea IPs reservadas / localhost (anti-SSRF)", () => {
+    expect(blockedReason("http://localhost:3000/x")).toBe("blocked");
+    expect(blockedReason("http://127.0.0.1/admin")).toBe("blocked");
+    expect(blockedReason("http://169.254.169.254/latest/meta-data")).toBe("blocked");
+    expect(blockedReason("http://10.0.0.1/x")).toBe("blocked");
+  });
+
+  it("bloquea .onion", () => {
+    expect(blockedReason("https://x.onion/y")).toBe("blocked");
+  });
+
+  it("bloquea keywords NSFW en el host", () => {
+    expect(blockedReason("https://pornhub.tv")).toBe("nsfw");
   });
 });
