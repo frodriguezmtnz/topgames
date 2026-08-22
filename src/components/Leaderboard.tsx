@@ -65,7 +65,7 @@ export default function Leaderboard() {
           {g.rank === 1 && (
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 -z-10 animate-ping rounded-xl border-2 border-emerald-400/60"
+              className="pointer-events-none absolute inset-0 -z-10 animate-ping-soft motion-reduce:animate-none rounded-xl border-2 border-emerald-400/60"
             />
           )}
           <span className={`w-8 text-center font-bold ${rankColor(g.rank)} ${g.rank === 1 ? "text-2xl" : "text-lg"}`}>
