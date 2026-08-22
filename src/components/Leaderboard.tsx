@@ -37,6 +37,19 @@ const rowClass = (rank: number) =>
     ? "border-emerald-500/70 bg-neutral-900/70 shadow-[0_0_18px_rgba(16,185,129,0.25)]"
     : "border-neutral-800 bg-neutral-900/50";
 
+function steal(g: GameRow) {
+  window.dispatchEvent(
+    new CustomEvent("topgames:steal", {
+      detail: {
+        url: g.url,
+        name: g.name,
+        bidDollars: g.claimCents / 100,
+        rank: g.rank,
+      },
+    }),
+  );
+}
+
 export default function Leaderboard() {
   const { data, error } = useSWR<BoardResponse>("/api/board", fetcher, {
     refreshInterval: 10_000,
@@ -78,14 +91,23 @@ export default function Leaderboard() {
             <span className="text-sm font-semibold text-neutral-100">
               {formatMoney(g.bidCents)}
             </span>
-            <a
-              href={`/api/r/${encodeURIComponent(g.key)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-full border border-neutral-700 px-3 py-1 text-xs text-neutral-300 hover:border-neutral-400"
-            >
-              Play
-            </a>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => steal(g)}
+                className="rounded-full border border-emerald-500/60 px-3 py-1 text-xs font-medium text-emerald-400 transition hover:bg-emerald-500/10"
+              >
+                Steal spot
+              </button>
+              <a
+                href={`/api/r/${encodeURIComponent(g.key)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-full border border-neutral-700 px-3 py-1 text-xs text-neutral-300 hover:border-neutral-400"
+              >
+                Play
+              </a>
+            </div>
           </div>
         </div>
       ))}
