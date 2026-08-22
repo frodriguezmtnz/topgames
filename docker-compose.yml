@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: topgames-pg
+    environment:
+      POSTGRES_USER: topgames
+      POSTGRES_PASSWORD: topgames
+      POSTGRES_DB: topgames
+    ports:
+      - "5432:5432"
+    volumes:
+      - topgames_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U topgames -d topgames"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  topgames_pgdata:

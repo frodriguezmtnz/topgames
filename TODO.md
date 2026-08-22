@@ -28,11 +28,14 @@ motor de pujas y checkout/webhook con Lemon Squeezy (modo mock para local).
 
 ## 3. Fase 4 — Deploy + dominio
 
-- [ ] Crear DB Postgres (Neon o Vercel Postgres) y migrar el schema de SQLite → Postgres
-      (con `prisma migrate`, adaptador `@prisma/adapter-pg`).
-- [ ] Importar el repo en Vercel, setear env vars en producción.
+- [ ] Crear DB Postgres (Neon free o Vercel) y pegar su connection string en `DATABASE_URL` (.env y Vercel).
+- [ ] `npm run db:deploy` (o `prisma migrate deploy`) contra Neon para crear las tablas.
+- [ ] `npm run db:seed` contra Neon (poblara el ranking demo).
+- [ ] Cerrar los 4 valores de Lemon Squeezy en el dashboard y ponerlos en `.env`/Vercel.
+- [ ] Importar el repo en Vercel, setear env vars en produccion (`PAYMENT_MOCK=0`).
 - [ ] Comprar dominio (ej. `topgames.gg` / `.game` / `.lol`), configurar DNS + dominio en Vercel.
-- [ ] KYC/datos bancarios si se cobra con Stripe (con MoR no hace falta).
+- [ ] Configurar webhook en Lemon Squeezy → `/api/webhooks/lemonsqueezy`.
+- [ ] Probar pago real de $5.
 
 ## 4. Robustez / seguridad (después del MVP)
 
