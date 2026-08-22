@@ -12,6 +12,7 @@ export async function GET() {
 
   const rows = games.map((g, i) => ({
     rank: i + 1,
+    key: g.key,
     name: g.name,
     url: g.url,
     coverUrl: g.coverUrl,

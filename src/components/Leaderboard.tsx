@@ -5,6 +5,7 @@ import { formatMoney, hostnameOf } from "@/lib/format";
 
 type GameRow = {
   rank: number;
+  key: string;
   name: string;
   url: string;
   coverUrl: string | null;
@@ -73,17 +74,9 @@ export default function Leaderboard() {
               {formatMoney(g.bidCents)}
             </span>
             <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                try {
-                  const u = new URL(g.url);
-                  u.searchParams.set("utm_source", "topgames");
-                  window.open(u.toString(), "_blank");
-                } catch {
-                  window.open(g.url, "_blank");
-                }
-              }}
+              href={`/api/r/${encodeURIComponent(g.key)}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="rounded-full border border-neutral-700 px-3 py-1 text-xs text-neutral-300 hover:border-neutral-400"
             >
               Play
