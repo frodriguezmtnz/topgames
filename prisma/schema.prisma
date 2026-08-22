@@ -1,0 +1,43 @@
+// Schema de TopGames: el ranking se calcula por el bid (nunca se almacena la posicion).
+// Monto en enteros de centimos para evitar errores de floats (Stripe/PayPal usan centimos).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Game {
+  id          String     @id @default(cuid())
+  key         String     @unique // URL normalizada (host+path, sin query params) que identifica al juego
+  name        String              // nombre visible en el ranking
+  url         String              // URL canonica a la que apunta el click
+  description String?
+  coverUrl    String?
+  bidCents    Int                 // puja actual en centimos (>= 500)
+  clicks      Int        @default(0)
+  lastClickAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  payments    Payment[]
+
+  @@index([bidCents])
+}
+
+model Payment {
+  id               String   @id @default(cuid())
+  provider         String // 'stripe' | 'paypal' | 'lemonsqueezy'
+  providerPaymentId String  @unique // idempotencia: el mismo pago del proveedor solo se aplica una vez
+  gameId           String
+  game             Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  kind             String // 'new' | 'raise'
+  amountCents      Int
+  status           String   @default("paid")
+  createdAt        DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([gameId])
+}
