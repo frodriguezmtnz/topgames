@@ -79,6 +79,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </nav>
         </header>
         {children}
+        <footer className="mx-auto flex w-full max-w-3xl items-center justify-between gap-4 px-5 py-8 text-xs text-neutral-600">
+          <span>© {new Date().getFullYear()} topvideogames.lol</span>
+          <nav className="flex items-center gap-4">
+            <Link href="/privacy" className="transition hover:text-neutral-300">
+              Privacy
+            </Link>
+            <Link href="/terms" className="transition hover:text-neutral-300">
+              Terms
+            </Link>
+          </nav>
+        </footer>
         <Analytics />
       </body>
     </html>
