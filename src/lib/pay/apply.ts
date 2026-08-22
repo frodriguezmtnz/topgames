@@ -8,9 +8,12 @@ import type { BidCustomData } from "./types";
  * - Idempotente: un mismo providerPaymentId solo se registra una vez.
  */
 export async function applyPaidOrder(provider: string, providerPaymentId: string, custom: BidCustomData) {
+  const target = Number(custom.targetCents);
+  if (!Number.isFinite(target) || target <= 0) return null;
+
   return prisma.$transaction(async (tx) => {
     const existing = await tx.game.findUnique({ where: { key: custom.key } });
-    const newBid = Math.max(existing?.bidCents ?? 0, custom.targetCents);
+    const newBid = Math.max(existing?.bidCents ?? 0, target);
 
     const game = await tx.game.upsert({
       where: { key: custom.key },
@@ -27,7 +30,7 @@ export async function applyPaidOrder(provider: string, providerPaymentId: string
         name: custom.name,
         description: custom.description,
         coverUrl: custom.coverUrl,
-        bidCents: custom.targetCents,
+        bidCents: Number(custom.targetCents),
       },
     });
 
@@ -39,7 +42,7 @@ export async function applyPaidOrder(provider: string, providerPaymentId: string
         providerPaymentId,
         gameId: game.id,
         kind: existing ? "raise" : "new",
-        amountCents: custom.targetCents,
+        amountCents: Number(custom.targetCents),
         status: "paid",
       },
     });

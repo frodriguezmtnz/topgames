@@ -76,21 +76,24 @@ export async function POST(req: NextRequest) {
     name: plan.name,
     description: plan.description,
     coverUrl: plan.coverUrl,
-    targetCents: plan.targetCents,
+    targetCents: String(plan.targetCents),
   };
 
   const mock = process.env.PAYMENT_MOCK === "1" || !isLemonSqueezyConfigured();
   if (mock) {
-    const { game, payment } = await applyPaidOrder(
+    const applied = await applyPaidOrder(
       "mock",
       `mock:${Date.now()}:${custom.key}`,
       custom,
     );
+    if (!applied) {
+      return NextResponse.json({ error: "No se pudo aplicar la puja." }, { status: 500 });
+    }
     return NextResponse.json({
       mock: true,
       redirectUrl: buildSuccessUrl(plan.key),
-      rankAppliedFor: game.bidCents,
-      orderId: payment.providerPaymentId,
+      rankAppliedFor: applied.game.bidCents,
+      orderId: applied.payment.providerPaymentId,
     });
   }
 

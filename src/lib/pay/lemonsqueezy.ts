@@ -14,8 +14,9 @@ export function isLemonSqueezyConfigured(): boolean {
 
 /**
  * Crea el checkout de un solo pago en LemonSqueezy.
- * custom_price fija el importe exacto (en centimos) sobre un variant creado
- * con "pay what you want" (minimo $5).
+ * custom_price (atributo de nivel superior) fija el importe exacto en centimos
+ * sobre el variant del producto; checkout_data.custom lleva los datos del juego
+ * que luego devuelve el webhook.
  */
 export async function createCheckoutUrl(input: {
   custom: BidCustomData;
@@ -40,16 +41,27 @@ export async function createCheckoutUrl(input: {
       data: {
         type: "checkouts",
         attributes: {
-          checkout_data: {
-            custom_price: input.custom.targetCents,
-            currency: "USD",
-            custom: input.custom,
-          },
+          custom_price: Number(input.custom.targetCents),
           product_options: {
             name: input.custom.name,
             description: input.description,
             redirect_url: input.successUrl,
           },
+          checkout_data: {
+            custom: {
+              key: input.custom.key,
+              url: input.custom.url,
+              name: input.custom.name,
+              ...(input.custom.description && input.custom.description.length > 0
+                ? { gameDescription: input.custom.description }
+                : {}),
+              ...(input.custom.coverUrl && input.custom.coverUrl.length > 0
+                ? { gameCover: input.custom.coverUrl }
+                : {}),
+              targetCents: input.custom.targetCents,
+            },
+          },
+          expires_at: null,
         },
         relationships: {
           store: { data: { type: "stores", id: storeId } },

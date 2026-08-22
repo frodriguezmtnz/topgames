@@ -1,5 +1,6 @@
 // Seeder: puebla el ranking con juegos demo para ver la web con "look" real.
 // Se ejecuta con: npm run db:seed
+import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 

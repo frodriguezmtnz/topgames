@@ -7,29 +7,32 @@ export const runtime = "nodejs";
 
 function extractCustom(attributes: Record<string, unknown> | undefined): BidCustomData | null {
   const candidates = [
-    attributes?.meta_data,
-    attributes?.custom_meta,
     attributes?.custom,
     attributes?.checkout_data,
+    attributes?.meta_data,
+    attributes?.custom_meta,
   ] as unknown[];
 
   for (const c of candidates) {
     if (c && typeof c === "object" && !Array.isArray(c)) {
       const obj = c as Record<string, unknown>;
+      const rawTarget = obj.key && obj.url && obj.name
+        ? (obj.targetCents as unknown)
+        : null;
       if (
         typeof obj.key === "string" &&
         typeof obj.url === "string" &&
         typeof obj.name === "string" &&
-        typeof obj.targetCents === "number"
+        (typeof rawTarget === "string" || typeof rawTarget === "number")
       ) {
         return {
           key: obj.key,
           url: obj.url,
           name: obj.name,
           description:
-            typeof obj.description === "string" ? obj.description : null,
-          coverUrl: typeof obj.coverUrl === "string" ? obj.coverUrl : null,
-          targetCents: obj.targetCents,
+            typeof obj.gameDescription === "string" ? obj.gameDescription : null,
+          coverUrl: typeof obj.gameCover === "string" ? obj.gameCover : null,
+          targetCents: String(rawTarget),
         };
       }
     }
@@ -79,5 +82,8 @@ export async function POST(req: NextRequest) {
 
   const providerPaymentId = `lemonsqueezy:${data.id}`;
   const applied = await applyPaidOrder("lemonsqueezy", providerPaymentId, custom);
+  if (!applied) {
+    return NextResponse.json({ ok: true, note: "order sin importe valido" });
+  }
   return NextResponse.json({ ok: true, applied: applied.payment.kind });
 }
