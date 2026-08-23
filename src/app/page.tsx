@@ -62,19 +62,19 @@ export default async function Home() {
         </p>
       </section>
 
-      <section className="text-center">
-        <BidForm />
-        <p className="mt-3 text-xs text-neutral-500">
-          Already in the ranking? Use the same URL to raise your bid.
-        </p>
-      </section>
-
       <section>
         <div className="mb-3 flex items-end justify-between">
           <h2 className="text-lg font-semibold text-neutral-200">Leaderboard</h2>
           <span className="text-xs text-neutral-500">refreshes automatically</span>
         </div>
         <Leaderboard />
+      </section>
+
+      <section className="text-center">
+        <BidForm />
+        <p className="mt-3 text-xs text-neutral-500">
+          Already in the ranking? Use the same URL to raise your bid.
+        </p>
       </section>
 
       <ActivityFeed />
