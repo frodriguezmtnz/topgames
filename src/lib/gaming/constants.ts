@@ -3,7 +3,9 @@
 export const MIN_BID_CENTS = 500; // €5 minimo
 export const MAX_BID_CENTS = 99999900; // €999,999 maximo
 export const OUTBID_STEP_CENTS = 100; // €1 por escalon
-export const APP_URL = process.env.APP_URL ?? "http://localhost:3000";
+export const APP_URL = (process.env.APP_URL ?? "http://localhost:3000")
+  .trim()
+  .replace(/\/+$/, "");
 
 // Dominios no permitidos en el board: chats, plataformas adult, shorteners, etc.
 export const BLOCKED_HOSTS = [
