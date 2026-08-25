@@ -1,5 +1,6 @@
-// Schema de TopGames: el ranking se calcula por el bid (nunca se almacena la posicion).
-// Monto en enteros de centimos para evitar errores de floats (Stripe/PayPal usan centimos).
+// Schema de TopVideoGames.lol — ranking comunitario gratuito.
+// La comunidad decide el ranking mediante votos (1 usuario = 1 voto por juego).
+// La monetizacion (afiliacion) esta separada de la integridad del ranking.
 
 generator client {
   provider = "prisma-client"
@@ -10,34 +11,95 @@ datasource db {
   provider = "postgresql"
 }
 
-model Game {
-  id          String     @id @default(cuid())
-  key         String     @unique // URL normalizada (host+path, sin query params) que identifica al juego
-  name        String              // nombre visible en el ranking
-  url         String              // URL canonica a la que apunta el click
-  description String?
-  coverUrl    String?
-  bidCents    Int                 // puja actual en centimos (>= 500)
-  clicks      Int        @default(0)
-  lastClickAt DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  payments    Payment[]
-
-  @@index([bidCents])
+enum GameStatus {
+  active
+  hidden
+  merged
+  deleted
 }
 
-model Payment {
-  id               String   @id @default(cuid())
-  provider         String // 'stripe' | 'paypal' | 'lemonsqueezy'
-  providerPaymentId String  @unique // idempotencia: el mismo pago del proveedor solo se aplica una vez
-  gameId           String
-  game             Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  kind             String // 'new' | 'raise'
-  amountCents      Int
-  status           String   @default("paid")
-  createdAt        DateTime @default(now())
+enum VoteStatus {
+  active
+  revoked
+}
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  passwordHash      String
+  emailVerifiedAt   DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  votes             Vote[]
+  affiliateClicks   AffiliateClick[]
+  auditLogs         AuditLog[]
 
   @@index([createdAt])
+}
+
+model Game {
+  id               String         @id @default(cuid())
+  provider         String // 'rawg' (GameProvider)
+  providerGameId   String
+  name             String
+  slug             String         @unique // URL estable: /games/:slug
+  coverUrl         String?
+  backgroundUrl    String?
+  releasedAt       DateTime?
+  description      String?
+  websiteUrl       String?
+  status           GameStatus     @default(active)
+  voteCount        Int            @default(0) // contador denormalizado, incrementado en la misma transaccion del voto (server-side)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  votes            Vote[]
+  affiliateClicks  AffiliateClick[]
+
+  @@unique([provider, providerGameId])
+  @@index([status, voteCount])
+  @@index([createdAt])
+}
+
+// Constraint UNIQUE(user_id, game_id): 1 usuario = 1 voto por juego.
+model Vote {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gameId    String
+  game      Game       @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  status    VoteStatus @default(active)
+  createdAt DateTime   @default(now())
+
+  @@unique([userId, gameId])
   @@index([gameId])
+  @@index([createdAt])
+}
+
+// Registro de clicks de salida hacia tiendas / programas de afiliacion.
+// Solo datos necesarios (sin datos personales innecesarios).
+model AffiliateClick {
+  id        String    @id @default(cuid())
+  gameId    String
+  game      Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  provider  String // 'steam' | 'humble' | ... segun la investigacion de afiliados
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  referrer  String?
+  createdAt DateTime  @default(now())
+
+  @@index([gameId, createdAt])
+  @@index([provider])
+}
+
+// Auditoria de acciones administrativas (integridad del ranking).
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action    String // 'game.hide' | 'game.merge' | 'game.delete' | 'vote.revoke' ...
+  targetId  String? // game/vote/user afectado
+  payload   String? // JSON con detalle
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }

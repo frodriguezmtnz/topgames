@@ -1,7 +1,5 @@
-// Seeder de lanzamiento: RESETEA el board y siembra 2 juegos "comprados" reales
-// (Half-Life 2 €6, GTA V €5) para que la web se vea viva en produccion.
-// Precios bajos para que cualquiera pueda robar el puesto con poco (viral).
-// Ambos en Steam: la portada sale del header de la CDN, sin necesidad de RAWG.
+// Seeder de desarrollo: RESETEA la DB y siembra juegos de ejemplo (proveedor 'rawg')
+// con algunos votos, para ver el ranking y las fichas funcionando en local.
 // Se ejecuta con: npm run db:seed
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -14,29 +12,41 @@ const prisma = new PrismaClient({ adapter });
 
 const games = [
   {
-    key: "store.steampowered.com/app/220/half-life_2",
-    name: "Half-Life 2",
-    url: "https://store.steampowered.com/app/220/Half-Life_2/",
+    provider: "rawg",
+    providerGameId: "3328",
+    name: "The Witcher 3: Wild Hunt",
+    slug: "the-witcher-3-wild-hunt",
     coverUrl:
-      "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/220/header.jpg",
-    description: "The FPS that redefined physics, storytelling and level design.",
-    bidCents: 600,
-    clicks: 214,
+      "https://media.rawg.io/media/games/618/618c2031a07bbff6b4f9cbf8a7a43f7e.jpg",
+    description:
+      "Geralt of Rivia hunts monsters and searches for his adopted daughter across a vast open world.",
+    websiteUrl: "https://thewitcher.com/en/witcher3",
+    releasedAt: new Date("2015-05-19"),
   },
   {
-    key: "store.steampowered.com/app/3240220/grand_theft_auto_v",
-    name: "Grand Theft Auto V Enhanced",
-    url: "https://store.steampowered.com/app/3240220/Grand_Theft_Auto_V_Enhanced/",
+    provider: "rawg",
+    providerGameId: "3498",
+    name: "Grand Theft Auto V",
+    slug: "grand-theft-auto-v",
     coverUrl:
-      "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3240220/header.jpg",
-    description: "Los Santos is waiting. The open-world crime sandbox of a decade.",
-    bidCents: 500,
-    clicks: 156,
+      "https://media.rawg.io/media/games/84d/84d9df42e4a6e4e2bf3d0f6f7f4c5b2a.jpg",
+    description: "An open-world crime sandbox set in Los Santos.",
+    websiteUrl: "https://www.rockstargames.com/gta-v",
+    releasedAt: new Date("2013-09-17"),
+  },
+  {
+    provider: "rawg",
+    providerGameId: "3439",
+    name: "Half-Life 2",
+    slug: "half-life-2",
+    coverUrl: "https://media.rawg.io/media/games/7a2/7a2ejecfcfc4e5a4f2d1c6e7e8a9b0c1.jpg",
+    description: "The FPS that redefined physics, storytelling and level design.",
+    websiteUrl: "https://www.half-life.com",
+    releasedAt: new Date("2004-11-16"),
   },
 ];
 
 async function main() {
-  // Borra todo el board (deleteMany cascade a payments) y siembra los 2 juegos.
   const deleted = await prisma.game.deleteMany();
   const wins = await Promise.all(
     games.map((g) =>
@@ -45,7 +55,9 @@ async function main() {
       }),
     ),
   );
-  console.log(`Seed ok: borrados ${deleted.count} juegos, insertados ${wins.length}.`);
+  console.log(
+    `Seed ok: borrados ${deleted.count} juegos, insertados ${wins.length}.`,
+  );
 }
 
 main()
