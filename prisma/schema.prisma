@@ -68,6 +68,8 @@ model Game {
   releasedAt       DateTime?
   description      String?
   websiteUrl       String?
+  genres           String[]
+  platforms        String[]
   status           GameStatus     @default(active)
   voteCount        Int            @default(0) // contador denormalizado, incrementado en la misma transaccion del voto (server-side)
   createdAt        DateTime       @default(now())
