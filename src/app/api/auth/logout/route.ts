@@ -1,0 +1,9 @@
+import { NextRequest, NextResponse } from "next/server";
+import { deleteSession } from "@/lib/auth/session";
+
+export const runtime = "nodejs";
+
+export async function POST(req: NextRequest) {
+  await deleteSession();
+  return NextResponse.json({ message: "Logged out" });
+}
