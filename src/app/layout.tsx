@@ -4,6 +4,8 @@ import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import ThemeToggle from "@/components/ThemeToggle";
+import LogoutButton from "@/components/LogoutButton";
+import { getSessionUser } from "@/lib/auth/session";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -42,7 +44,8 @@ export const metadata: Metadata = {
 
 const themeScript = `(function(){try{var t=localStorage.getItem('topgames-theme');var light=t?t==='light':window.matchMedia('(prefers-color-scheme: light)').matches;document.documentElement.dataset.theme=light?'light':'dark';}catch(e){document.documentElement.dataset.theme='dark';}})();`;
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const user = await getSessionUser();
   return (
     <html
       lang="en"
@@ -80,6 +83,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Link href="/about" className="transition hover:text-neutral-200">
               About
             </Link>
+            {user ? (
+              <>
+                <span className="hidden text-sm sm:inline" title={user.email}>
+                  {user.email}
+                </span>
+                <LogoutButton />
+              </>
+            ) : (
+              <Link href="/login" className="transition hover:text-neutral-200">
+                Log in
+              </Link>
+            )}
             <ThemeToggle />
           </nav>
         </header>

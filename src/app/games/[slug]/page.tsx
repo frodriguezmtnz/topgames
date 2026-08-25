@@ -5,6 +5,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { rawgProvider } from "@/lib/games/rawg";
 import { formatNumber } from "@/lib/format";
+import VoteButton from "@/components/VoteButton";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -141,12 +142,7 @@ export default async function GamePage({ params }: Props) {
         </div>
       </div>
 
-      <button
-        data-vote-for={game.id}
-        className="rounded-lg bg-emerald-500 px-6 py-3 text-sm font-bold text-neutral-950 transition hover:bg-emerald-400"
-      >
-        ❤️ Vote for {game.name}
-      </button>
+      <VoteButton gameId={game.id} initialCount={game.voteCount} />
 
       {game.description && (
         <section>

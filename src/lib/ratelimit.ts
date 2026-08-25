@@ -1,23 +1,26 @@
 import { Redis } from "@upstash/redis";
 
-// Rate-limit por IP para /api/bid.
+// Rate-limit por IP, reutilizable por endpoint (prefijo + ventana + max).
 // - En produccion (Vercel) usa Upstash Redis (@upstash/redis) a traves de las
 //   env vars auto-inyectadas por la integracion (KV_REST_API_URL / KV_REST_API_TOKEN).
 // - En local, sin esas variables, cae a una cola en memoria (suficiente para dev).
 
-const WINDOW_SECONDS = 60;
-const MAX = 6;
+export interface RateLimitOptions {
+  prefix: string;
+  max: number;
+  windowSeconds: number;
+}
 
-const memoryHits = new Map<string, number[]>();
+const memory = new Map<string, number[]>();
 
-function memoryAllowed(ip: string): boolean {
+function memoryAllowed(key: string, opts: RateLimitOptions): boolean {
   const now = Date.now();
-  const recent = (memoryHits.get(ip) ?? []).filter(
-    (t) => t > now - WINDOW_SECONDS * 1000,
+  const recent = (memory.get(key) ?? []).filter(
+    (t) => t > now - opts.windowSeconds * 1000,
   );
   recent.push(now);
-  memoryHits.set(ip, recent);
-  return recent.length <= MAX;
+  memory.set(key, recent);
+  return recent.length <= opts.max;
 }
 
 function hasUpstashConfig(): boolean {
@@ -36,15 +39,19 @@ function getRedis(): Redis | null {
   return new Redis({ url, token });
 }
 
-export async function rateLimit(ip: string): Promise<boolean> {
+export async function rateLimit(
+  ip: string,
+  opts: RateLimitOptions,
+): Promise<boolean> {
   const redis = getRedis();
+  const memKey = `${opts.prefix}:${ip}`;
   if (!redis) {
-    return memoryAllowed(ip);
+    return memoryAllowed(memKey, opts);
   }
-  const key = `bid:${ip}`;
+  const key = `${opts.prefix}:${ip}`;
   const count = await redis.incr(key);
   if (count === 1) {
-    await redis.expire(key, WINDOW_SECONDS);
+    await redis.expire(key, opts.windowSeconds);
   }
-  return count <= MAX;
+  return count <= opts.max;
 }
