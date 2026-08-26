@@ -76,6 +76,7 @@ model Game {
   updatedAt        DateTime       @updatedAt
   votes            Vote[]
   affiliateClicks  AffiliateClick[]
+  storeLinks       StoreLink[]
 
   @@unique([provider, providerGameId])
   @@index([status, voteCount])
@@ -110,6 +111,19 @@ model AffiliateClick {
   createdAt DateTime  @default(now())
 
   @@index([gameId, createdAt])
+  @@index([provider])
+}
+
+// Enlace de cada tienda ("Where to buy") para un juego, obtenido de RAWG (o manual).
+model StoreLink {
+  id        String   @id @default(cuid())
+  gameId    String
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  provider  String // 'steam' | 'humble' | 'amazon' | 'epic' ...
+  url       String
+  createdAt DateTime @default(now())
+
+  @@unique([gameId, provider])
   @@index([provider])
 }
 

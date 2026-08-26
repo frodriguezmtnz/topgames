@@ -5,6 +5,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { rawgProvider } from "@/lib/games/rawg";
 import { formatNumber } from "@/lib/format";
+import { providerInfo } from "@/lib/affiliate/providers";
 import VoteButton from "@/components/VoteButton";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -31,6 +32,20 @@ async function loadGame(slug: string) {
             backgroundUrl: detail.backgroundUrl ?? game.backgroundUrl,
           },
         });
+        // Guardar los "Where to buy" que vienen del detalle de RAWG.
+        if (detail.stores && detail.stores.length > 0) {
+          await prisma.$transaction(
+            detail.stores.map((s) =>
+              prisma.storeLink.upsert({
+                where: {
+                  gameId_provider: { gameId: game.id, provider: s.provider },
+                },
+                update: { url: s.url },
+                create: { gameId: game.id, provider: s.provider, url: s.url },
+              }),
+            ),
+          );
+        }
         return prisma.game.findUnique({ where: { id: game.id } });
       }
     } catch {
@@ -81,15 +96,18 @@ export default async function GamePage({ params }: Props) {
 
   const rank = await rankOf(game.voteCount);
 
-  const related = await prisma.game.findMany({
-    where: {
-      status: "active",
-      id: { not: game.id },
-      genres: { hasSome: game.genres },
-    },
-    orderBy: { voteCount: "desc" },
-    take: 6,
-  });
+  const [related, storeLinks] = await Promise.all([
+    prisma.game.findMany({
+      where: {
+        status: "active",
+        id: { not: game.id },
+        genres: { hasSome: game.genres },
+      },
+      orderBy: { voteCount: "desc" },
+      take: 6,
+    }),
+    prisma.storeLink.findMany({ where: { gameId: game.id } }),
+  ]);
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-5 py-10">
@@ -143,6 +161,29 @@ export default async function GamePage({ params }: Props) {
       </div>
 
       <VoteButton gameId={game.id} initialCount={game.voteCount} />
+
+      {storeLinks.length > 0 && (
+        <section>
+          <h2 className="mb-2 text-lg font-semibold text-neutral-200">
+            Where to buy
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {storeLinks.map((s) => {
+              const info = providerInfo(s.provider);
+              return (
+                <a
+                  key={s.id}
+                  href={`/out/${s.provider}/${game.slug}`}
+                  rel="noopener noreferrer"
+                  className="rounded-lg border border-neutral-800 px-4 py-2 text-sm font-semibold text-neutral-200 transition hover:border-emerald-600 hover:text-emerald-300"
+                >
+                  {info?.label ?? s.provider}
+                </a>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {game.description && (
         <section>

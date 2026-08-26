@@ -37,7 +37,13 @@ export async function GET(req: NextRequest) {
         where: {
           provider_providerGameId: { provider: "rawg", providerGameId: g.providerGameId },
         },
-        update: {},
+        update: {
+          name: g.name,
+          coverUrl: g.coverUrl,
+          releasedAt: g.releasedAt,
+          genres: g.genres ?? [],
+          platforms: g.platforms ?? [],
+        },
         create: {
           provider: g.provider,
           providerGameId: g.providerGameId,

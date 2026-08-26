@@ -10,6 +10,7 @@ export interface Game {
   websiteUrl?: string;
   genres?: string[];
   platforms?: string[];
+  stores?: Array<{ provider: string; url: string }>;
 }
 
 export interface GameProvider {

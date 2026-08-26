@@ -24,7 +24,20 @@ interface RawgListItem {
 interface RawgDetail extends RawgListItem {
   description_raw?: string | null;
   website?: string | null;
+  stores?: Array<{ store: { slug: string }; url: string }>;
 }
+
+// Mapeo de store.slug de RAWG a nuestros ids de proveedor (ver lib/affiliate/providers).
+const STORE_SLUG_MAP: Record<string, string> = {
+  steam: "steam",
+  "epic-games": "epic",
+  gog: "gog",
+  "playstation-store": "playstation-store",
+  "xbox-store": "xbox-store",
+  "nintendo-store": "nintendo-store",
+  "humble-store": "humble",
+  amazon: "amazon",
+};
 
 function mapList(raw: RawgListItem): Game {
   return {
@@ -45,6 +58,12 @@ function mapDetail(raw: RawgDetail): Game {
     backgroundUrl: raw.background_image ?? undefined,
     description: raw.description_raw ?? undefined,
     websiteUrl: raw.website ?? undefined,
+    stores: (raw.stores ?? [])
+      .map((s) => ({
+        provider: STORE_SLUG_MAP[s.store.slug] ?? s.store.slug,
+        url: s.url,
+      }))
+      .filter((s) => Boolean(s.url)),
   };
 }
 
