@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Codigo archivado (modelo de puja) que no se ejecuta:
+    "src/legacy/**",
   ]),
 ]);
 
