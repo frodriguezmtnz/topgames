@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { rawgProvider } from "@/lib/games/rawg";
+import { rateLimit } from "@/lib/ratelimit";
+import { clientIp } from "@/lib/http";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  if (
+    !(await rateLimit(clientIp(req), {
+      prefix: "search",
+      max: 30,
+      windowSeconds: 60,
+    }))
+  ) {
+    return NextResponse.json(
+      { error: "Too many requests. Slow down." },
+      { status: 429 },
+    );
+  }
+
   const q = (req.nextUrl.searchParams.get("q") ?? "").trim();
 
   if (!q) {

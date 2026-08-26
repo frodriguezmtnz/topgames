@@ -2,10 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth/password";
 import { createSession, setSessionCookie } from "@/lib/auth/session";
+import { rateLimit } from "@/lib/ratelimit";
+import { clientIp } from "@/lib/http";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
+  if (
+    !(await rateLimit(clientIp(req), {
+      prefix: "login",
+      max: 15,
+      windowSeconds: 300,
+    }))
+  ) {
+    return NextResponse.json(
+      { error: "Too many attempts. Try again later." },
+      { status: 429 },
+    );
+  }
+
   let body: { email?: string; password?: string };
   try {
     body = await req.json();

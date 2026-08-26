@@ -3,10 +3,25 @@ import { prisma } from "@/lib/db";
 import { randomToken, sha256 } from "@/lib/auth/password";
 import { isValidEmail } from "@/lib/auth/validation";
 import { sendResetEmail } from "@/lib/auth/mail";
+import { rateLimit } from "@/lib/ratelimit";
+import { clientIp } from "@/lib/http";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
+  if (
+    !(await rateLimit(clientIp(req), {
+      prefix: "forgot",
+      max: 5,
+      windowSeconds: 900,
+    }))
+  ) {
+    return NextResponse.json(
+      { error: "Too many attempts. Try again later." },
+      { status: 429 },
+    );
+  }
+
   let body: { email?: string };
   try {
     body = await req.json();

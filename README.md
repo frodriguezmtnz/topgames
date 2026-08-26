@@ -1,106 +1,112 @@
 # topgames — topvideogames.lol
 
-Leaderboard público de videojuegos donde el ranking lo decide tu puja: cada fila es
-un juego y quien paga más se coloca más arriba. Sin anuncios, sin API keys, sin
-revenue share. Clon de outbid.lol aplicado a videojuegos.
+Ranking global de videojuegos gratuito y comunitario donde **la comunidad decide** con
+votos (1 usuario = 1 voto por juego). Sin cobrar por posiciones, sin boosts, sin venta
+de votos. La monetizacion llega por **afiliacion** (enlaces a tiendas), separada de la
+integridad del ranking.
 
 ## Stack
 
 - **Next.js 16** (App Router) + React 19 + Tailwind CSS 4
-- **Prisma 7** + **PostgreSQL** (Neon, con pooler) — schema en `prisma/schema.prisma`
-- **Lemon Squeezy** como merchant of record (checkout + webhook de pagos)
-- **Upstash Redis** para rate-limit de `/api/bid` (fallback a memoria en local)
-- **Vercel** para deploy, dominio `topvideogames.lol`, Analytics, sitemap y robots
-- **Vitest** para tests unitarios (`src/**/*.test.ts`)
+- **Prisma 7** + **PostgreSQL** (Neon) — schema en `prisma/schema.prisma`
+- **RAWG** como catalogo (GameProvider): se cachea en la DB local, no se consulta en
+  cada page view
+- **Upstash Redis** para rate-limit (fallback a memoria en local)
+- **Resend** para emails de verificacion/reset (en dev se muestran por consola)
+- **Vercel** para deploy, dominio `topvideogames.lol`, sitemap y robots
+- **Vitest** para tests (`src/**/*.test.ts`)
+
+> El codigo del modelo anterior (puja pagada + Lemon Squeezy + leaderboard por bid) se
+> movio a `src/legacy/` y **no se compila ni se ejecuta**. Esta excluido de tsconfig,
+> eslint y vitest.
 
 ## Arquitectura
 
-El ranking se calcula en tiempo real por el bid; nunca se almacena la posición. Los
-montos se guardan en centimos (enteros) para evitar errores de floats.
+```
+RAWG → GameProvider → DB local → Ranking
+```
+
+- `GET /api/games/search?q=` consulta la DB local primero; si no hay resultados, va a
+  RAWG, persiste el juego (y sus tiendas) y devuelve.
+- El ranking se calcula por `vote_count` (no se almacena posicion). Empates: mas votos →
+  primero que lo alcanzo → ID interno.
+- El conteo de votos se incrementa **server-side** en la misma transaccion que crea el
+  `Vote`, con `UNIQUE(user_id, game_id)`: 1 voto por usuario y juego, sin duplicados.
 
 ```
 src/
 ├── app/
-│   ├── page.tsx            # leaderboard + formulario de puja
-│   ├── rules/ about/       # páginas de contenido
-│   ├── privacy/ terms/     # páginas legales
+│   ├── page.tsx               # ranking mundial
+│   ├── games/[slug]           # ficha de juego (SEO, votos, where to buy, relacionados)
+│   ├── out/[provider]/[slug]  # redirect de salida con tracking (afiliados)
+│   ├── login register verify-email forgot-password reset-password
 │   ├── api/
-│   │   ├── bid/            # planifica la puja y crea el checkout LS
-│   │   ├── board/          # JSON del ranking (SWR, refresh 10s)
-│   │   ├── activity/       # feed de actividad reciente
-│   │   ├── r/[key]/        # redirect de clicks (trackea visits)
-│   │   └── webhooks/lemonsqueezy/  # aplica pagos confirmados
-│   └── success/ canceled/  # resultado post-checkout
-├── components/             # Leaderboard, BidForm, ActivityFeed, ThemeToggle
+│   │   ├── auth/              # register, login, verify-email, forgot/reset, logout, me
+│   │   ├── games/search       # busqueda + import desde RAWG
+│   │   └── games/[id]/vote    # votar (server-side, rate-limited)
+│   └── sitemap.ts robots.ts   # SEO
+├── components/                # VoteButton, AuthForm, LogoutButton, ThemeToggle
 └── lib/
-    ├── gaming/             # lógica de puja (planBid, urls, bloqueos)
-    ├── pay/                # LemonSqueezy, aplicación de pagos, success token
-    └── ratelimit.ts        # rate-limit por IP (Upstash / memoria)
+    ├── auth/                  # password (scrypt), session, mail, validation
+    ├── games/                 # GameProvider + RAWG, tipos
+    ├── affiliate/             # providers, url (tag de afiliado), marketing (tracking)
+    ├── votes/                 # servicio de voto (transaccion + constraint unico)
+    ├── ratelimit.ts           # rate-limit por IP (Upstash / memoria)
+    ├── db.ts                  # PrismaClient
+    └── config.ts              # APP_URL
 ```
 
 ## Puesta en marcha local
 
-Requisitos: Node 20+, una DB Postgres (local via Docker o Neon).
+Requisitos: Node 20+, una DB Postgres (local via Docker o Neon) y una API key de RAWG.
 
 ```bash
 npm install
-cp .env.example .env        # y rellena los valores (ver seccion "Variables")
-docker compose up -d db     # opcional: Postgres local (o usa Neon)
-npm run db:seed             # siembra el board de ejemplo (borra lo que haya)
-npm run dev                 # http://localhost:3000
+cp .env.example .env            # rellena DATABASE_URL, RAWG_API_KEY, APP_URL
+npx prisma migrate dev          # aplica migraciones
+npm run db:seed                 # siembra juegos de ejemplo
+npm run dev                     # http://localhost:3000
 ```
 
-Con `PAYMENT_MOCK=1` las pujas se aplican sin tarjeta (solo en local, nunca en
-produccion). La DB y los pagos se configuran en `.env`.
+Los emails de verificacion/reset se muestran por consola (`[Mail:dev]`) hasta que
+configures `RESEND_API_KEY`. Para votar necesitas una cuenta con email verificado.
 
 ### Tests
 
 ```bash
-npm test                    # vitest (puja, urls/bloqueos, aplicacion de pagos)
+npm test                        # vitest (password, affiliate, ...)
 ```
 
 ## Variables de entorno
 
-| Variable               | Descripcion                                                        |
-| ---------------------- | ------------------------------------------------------------------ |
-| `DATABASE_URL`         | Postgres con pooler (Neon). `sslmode=verify-full` recomendado.     |
-| `LEMON_API_KEY`        | API key de Lemon Squeezy.                                          |
-| `LEMON_STORE_ID`       | Store ID de Lemon Squeezy.                                         |
-| `LEMON_VARIANT_ID`     | Variant ID del producto "Pay what you want" (min €5).              |
-| `LEMON_WEBHOOK_SECRET` | Signing secret del webhook LS.                                     |
-| `APP_URL`              | URL publica de la app (base de redirects y sitemap).               |
-| `PAYMENT_MOCK`         | `1` = pagos simulados en local. En produccion siempre `0`.         |
-| `KV_REST_API_URL`      | Upstash Redis (la integracion de Vercel la inyecta).               |
-| `KV_REST_API_TOKEN`    | Token de Upstash Redis (idem).                                     |
+| Variable            | Descripcion                                                     |
+| ------------------- | --------------------------------------------------------------- |
+| `DATABASE_URL`      | Postgres con pooler (Neon). `sslmode=verify-full` recomendado.  |
+| `RAWG_API_KEY`      | API key de RAWG (catalogo).                                     |
+| `APP_URL`           | URL publica (sitemap, OG, redirects, emails).                   |
+| `RESEND_API_KEY`    | Envio de emails reales (opcional; sin ella, consola en dev).    |
+| `MAIL_FROM`         | Remitente de los emails.                                        |
+| `AFFILIATE_TAG_*`   | Tag de afiliado por proveedor (humble/amazon/...). Ver docs/.   |
+| `KV_REST_API_URL`   | Upstash Redis (rate-limit; opcional en local).                  |
+| `KV_REST_API_TOKEN` | Token de Upstash Redis.                                         |
 
 ## Deploy en Vercel
 
-1. Importa el repo en Vercel y conecta el dominio `topvideogames.lol`.
-2. En **Settings > Env Vars** (Production) define `DATABASE_URL`,
-   `LEMON_API_KEY`, `LEMON_STORE_ID`, `LEMON_VARIANT_ID`, `LEMON_WEBHOOK_SECRET`,
-   `APP_URL` y `PAYMENT_MOCK=0`. `PAYMENT_MOCK` nunca debe ser `1` en produccion.
-3. Instala las integraciones **Neon**, **Upstash** y activa **Vercel Analytics**.
-4. Aplica las migraciones a la DB de produccion:
-
-   ```bash
-   npm run db:deploy
-   ```
-
-5. En Lemon Squeezy registra el webhook hacia
-   `https://topvideogames.lol/api/webhooks/lemonsqueezy` con su signing secret.
-6. Verifica que el producto es "Pay what you want" con mínimo €5 (el código manda
-   `custom_price` en cada checkout).
+1. Importa el repo y conecta el dominio `topvideogames.lol`.
+2. En **Settings > Env Vars** define `DATABASE_URL`, `RAWG_API_KEY` y `APP_URL`.
+3. Aplica las migraciones: `npm run db:deploy`.
+4. Opcional: conecta upstash (rate-limit distribuido) y `RESEND_API_KEY` para emails.
 
 ## Scripts
 
-| Script           | Descripcion                                          |
-| ---------------- | ---------------------------------------------------- |
-| `npm run dev`    | servidor de desarrollo                               |
-| `npm run build`  | build de produccion (`next build`)                   |
-| `npm run start`  | sirve el build (`next start`)                        |
-| `npm run lint`   | eslint                                               |
-| `npm test`       | vitest                                               |
-| `db:deploy`      | aplica migraciones a la DB (usar en produccion)      |
-| `db:migrate`     | crea/aplica migraciones en dev                       |
-| `db:seed`        | resetea el board con el seed de ejemplo              |
-| `db:studio`      | Prisma Studio                                        |
+| Script         | Descripcion                                     |
+| -------------- | ----------------------------------------------- |
+| `npm run dev`  | servidor de desarrollo                          |
+| `npm run build`| build de produccion                             |
+| `npm run start`| sirve el build                                  |
+| `npm run lint` | eslint                                          |
+| `npm test`     | vitest                                          |
+| `db:migrate`   | crea/aplica migraciones en dev                  |
+| `db:deploy`    | aplica migraciones en produccion                |
+| `db:seed`      | resetea y siembra datos de ejemplo              |
+| `db:studio`    | Prisma Studio                                   |
