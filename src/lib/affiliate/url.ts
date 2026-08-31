@@ -1,10 +1,12 @@
 import { providerInfo } from "./providers";
 
-// Aplicar el parametro de afiliado a una URL cuando el proveedor tiene programa.
-// Los tags se leen de env para evitar hardcodear keys de afiliado.
+// Aplicar el parametro de afiliado a una URL para un proveedor concreto.
+// Un proveedor recibe tag SI se define AFFILIATE_TAG_<PROVIDER> (o el generico
+// AFFILIATE_TAG). Esto permite usar programas de referral manuales (consolas, etc.)
+// ademas de los programas con comision clasica (humble, amazon).
 export function applyAffiliateTag(providerId: string, url: string): string {
-  const info = providerInfo(providerId);
-  if (!info?.hasAffiliate) {
+  // Guard: solo proveedores conocidos entran aqui (para no taggear URLs arbitrarias).
+  if (!providerInfo(providerId)) {
     return url;
   }
 

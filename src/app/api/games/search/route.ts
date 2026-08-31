@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Query too long" }, { status: 400 });
   }
 
-  // 1) Buscar en la DB local primero (no golpear RAWG en cada busqueda repetida).
+  // 1) Buscar en la DB local primero (no golpear RAWG si ya esta importado).
   const local = await prisma.game.findMany({
     where: {
       status: "active",
@@ -41,42 +41,36 @@ export async function GET(req: NextRequest) {
   });
 
   if (local.length > 0) {
-    return NextResponse.json({ results: local });
+    return NextResponse.json({
+      results: local.map((g) => ({
+        imported: true,
+        id: g.id,
+        slug: g.slug,
+        name: g.name,
+        coverUrl: g.coverUrl,
+        releasedAt: g.releasedAt,
+        genres: g.genres,
+        platforms: g.platforms,
+      })),
+    });
   }
 
-  // 2) No en local → consultar RAWG, persistir y devolver.
+  // 2) No en local → consultar RAWG SIN persistir. Se importa bajo demanda al
+  //    abrir /games/:slug?rawg=<id> (evita polucionar la DB con 12 juegos por busqueda).
   const games = await rawgProvider.searchGames(q);
-  const persisted = await Promise.all(
-    games.map(async (g) => {
-      return prisma.game.upsert({
-        where: {
-          provider_providerGameId: { provider: "rawg", providerGameId: g.providerGameId },
-        },
-        update: {
-          name: g.name,
-          coverUrl: g.coverUrl,
-          releasedAt: g.releasedAt,
-          genres: g.genres ?? [],
-          platforms: g.platforms ?? [],
-        },
-        create: {
-          provider: g.provider,
-          providerGameId: g.providerGameId,
-          name: g.name,
-          slug: g.slug ?? generateSlug(g.name),
-          coverUrl: g.coverUrl,
-          backgroundUrl: g.backgroundUrl,
-          releasedAt: g.releasedAt,
-          description: g.description,
-          websiteUrl: g.websiteUrl,
-          genres: g.genres ?? [],
-          platforms: g.platforms ?? [],
-        },
-      });
-    }),
-  );
 
-  return NextResponse.json({ results: persisted });
+  return NextResponse.json({
+    results: games.map((g) => ({
+      imported: false,
+      rawgId: g.providerGameId,
+      slug: g.slug ?? generateSlug(g.name),
+      name: g.name,
+      coverUrl: g.coverUrl ?? null,
+      releasedAt: g.releasedAt ?? null,
+      genres: g.genres ?? [],
+      platforms: g.platforms ?? [],
+    })),
+  });
 }
 
 function generateSlug(name: string): string {

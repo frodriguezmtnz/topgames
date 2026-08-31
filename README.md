@@ -26,8 +26,10 @@ integridad del ranking.
 RAWG → GameProvider → DB local → Ranking
 ```
 
-- `GET /api/games/search?q=` consulta la DB local primero; si no hay resultados, va a
-  RAWG, persiste el juego (y sus tiendas) y devuelve.
+- `GET /api/games/search?q=` consulta la DB local primero; si no hay resultados, va a RAWG
+  y devuelve resultados **sin persistir**. El juego se importa (con sus tiendas) solo al
+  abrir su ficha: `/games/:slug?rawg=<id>`. Así el catalogo no se llena de basura por
+  busquedas.
 - El ranking se calcula por `vote_count` (no se almacena posicion). Empates: mas votos →
   primero que lo alcanzo → ID interno.
 - El conteo de votos se incrementa **server-side** en la misma transaccion que crea el
@@ -86,7 +88,7 @@ npm test                        # vitest (password, affiliate, ...)
 | `APP_URL`           | URL publica (sitemap, OG, redirects, emails).                   |
 | `RESEND_API_KEY`    | Envio de emails reales (opcional; sin ella, consola en dev).    |
 | `MAIL_FROM`         | Remitente de los emails.                                        |
-| `AFFILIATE_TAG_*`   | Tag de afiliado por proveedor (humble/amazon/...). Ver docs/.   |
+| `AFFILIATE_TAG_*`   | Tag de afiliado por proveedor (humble/amazon/xbox-store/...). Ver docs/. |
 | `KV_REST_API_URL`   | Upstash Redis (rate-limit; opcional en local).                  |
 | `KV_REST_API_TOKEN` | Token de Upstash Redis.                                         |
 

@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const isProd = process.env.NODE_ENV === "production";
+const isDev = !isProd;
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -21,7 +22,8 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       // Next.js inyecta scripts inline (theme + runtime); el SVG del logo usa data:.
-      "script-src 'self' 'unsafe-inline'",
+      // 'unsafe-eval' SOLO en dev: React lo usa para debug (error stacks). No va en prod.
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",
       // Portadas y assets vienen de hosts externos (Steam CDN, etc).
       "img-src 'self' data: blob: https:",
@@ -40,6 +42,14 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  images: {
+    // Portadas y backgrounds vienen de la CDN de RAWG. Con `unoptimized` se sirven
+    // tal cual; este remotePatterns permite usar el optimizador de Next si se quita
+    // unoptimized en el futuro.
+    remotePatterns: [
+      { protocol: "https", hostname: "media.rawg.io", pathname: "/media/**" },
+    ],
+  },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },

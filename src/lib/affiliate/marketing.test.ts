@@ -20,11 +20,17 @@ describe("affiliate providers", () => {
 });
 
 describe("applyAffiliateTag", () => {
-  const OLD = process.env.AFFILIATE_TAG_HUMBLE;
+  const SAVED: Record<string, string | undefined> = {
+    AFFILIATE_TAG_HUMBLE: process.env.AFFILIATE_TAG_HUMBLE,
+    AFFILIATE_TAG_XBOX_STORE: process.env.AFFILIATE_TAG_XBOX_STORE,
+    AFFILIATE_TAG: process.env.AFFILIATE_TAG,
+  };
 
   afterEach(() => {
-    if (OLD === undefined) delete process.env.AFFILIATE_TAG_HUMBLE;
-    else process.env.AFFILIATE_TAG_HUMBLE = OLD;
+    for (const [k, v] of Object.entries(SAVED)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
   });
 
   it("adds tag to an affiliate URL when the tag env is set", () => {
@@ -33,10 +39,16 @@ describe("applyAffiliateTag", () => {
     expect(tagged).toContain("tag=mysite-20");
   });
 
-  it("does not tag a provider without an affiliate program", () => {
-    process.env.AFFILIATE_TAG_HUMBLE = "mysite-20";
-    const url = "https://store.steampowered.com/app/220";
-    expect(applyAffiliateTag("steam", url)).toBe(url);
+  it("does not tag an unknown provider even with a generic tag", () => {
+    process.env.AFFILIATE_TAG = "site-1";
+    const url = "https://weirdstore.example/game";
+    expect(applyAffiliateTag("unknown-store", url)).toBe(url);
+  });
+
+  it("tags a provider without an affiliate program when a specific tag is set", () => {
+    process.env.AFFILIATE_TAG_XBOX_STORE = "site-xbox";
+    const url = "https://www.microsoft.com/en-us/p/game";
+    expect(applyAffiliateTag("xbox-store", url)).toContain("tag=site-xbox");
   });
 
   it("returns the original URL when no tag is configured", () => {

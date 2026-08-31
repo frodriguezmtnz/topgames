@@ -7,7 +7,8 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/success", "/canceled"],
+        // API interna y redirects de salida (afiliados): no deben indexarse.
+        disallow: ["/api/", "/out"],
       },
     ],
     sitemap: `${APP_URL}/sitemap.xml`,
