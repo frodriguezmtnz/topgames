@@ -16,4 +16,6 @@ export interface Game {
 export interface GameProvider {
   searchGames(query: string): Promise<Game[]>;
   getGame(id: string): Promise<Game | null>;
+  // Tiendas donde comprar con URL real (endpoint dedicado /games/{id}/stores).
+  getStores?(id: string): Promise<Array<{ provider: string; url: string }>>;
 }

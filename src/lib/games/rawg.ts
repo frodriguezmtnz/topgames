@@ -39,6 +39,20 @@ const STORE_SLUG_MAP: Record<string, string> = {
   amazon: "amazon",
 };
 
+// Mapeo de store_id (endpoint /stores) a nuestros ids de proveedor.
+const STORE_ID_MAP: Record<number, string> = {
+  1: "steam",
+  2: "xbox-store",
+  3: "playstation-store",
+  4: "apple-appstore",
+  5: "gog",
+  6: "nintendo",
+  7: "xbox360",
+  8: "google-play",
+  9: "itch",
+  11: "epic",
+};
+
 function mapList(raw: RawgListItem): Game {
   return {
     provider: "rawg",
@@ -95,6 +109,29 @@ export class RAWGGameProvider implements GameProvider {
     }
     const raw = (await res.json()) as RawgDetail;
     return mapDetail(raw);
+  }
+
+  async getStores(id: string): Promise<Array<{ provider: string; url: string }>> {
+    const url = new URL(`${BASE}/games/${id}/stores`);
+    url.searchParams.set("key", key());
+
+    const res = await fetch(url.toString());
+    if (res.status === 404) {
+      return [];
+    }
+    if (!res.ok) {
+      throw new Error(`RAWG stores failed (${res.status})`);
+    }
+    // El endpoint /games/{id}/stores devuelve store_id numerico (no slug).
+    const data = (await res.json()) as {
+      results?: Array<{ store_id: number; url: string }>;
+    };
+    return (data.results ?? [])
+      .map((s) => ({
+        provider: STORE_ID_MAP[s.store_id] ?? `store_${s.store_id}`,
+        url: s.url,
+      }))
+      .filter((s) => Boolean(s.url));
   }
 }
 

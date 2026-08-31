@@ -18,38 +18,54 @@ async function loadGame(slug: string) {
     return null;
   }
 
-  // Enriquecer una sola vez (primera vista) si falta el detalle de RAWG,
-  // para no consultar RAWG en cada page view.
-  if (game.provider === "rawg" && !game.description) {
-    try {
-      const detail = await rawgProvider.getGame(game.providerGameId);
-      if (detail) {
-        await prisma.game.update({
-          where: { id: game.id },
-          data: {
-            description: detail.description ?? game.description,
-            websiteUrl: detail.websiteUrl ?? game.websiteUrl,
-            backgroundUrl: detail.backgroundUrl ?? game.backgroundUrl,
-          },
-        });
-        // Guardar los "Where to buy" que vienen del detalle de RAWG.
-        if (detail.stores && detail.stores.length > 0) {
-          await prisma.$transaction(
-            detail.stores.map((s) =>
-              prisma.storeLink.upsert({
-                where: {
-                  gameId_provider: { gameId: game.id, provider: s.provider },
-                },
-                update: { url: s.url },
-                create: { gameId: game.id, provider: s.provider, url: s.url },
-              }),
-            ),
-          );
+  if (game.provider === "rawg") {
+    // Enriquecer el detalle una sola vez (si falta la descripcion) y rellenar
+    // las tiendas si aun no hay 'Where to buy'. No se consulta RAWG en cada page view.
+    const [storeLinks] = await Promise.all([
+      prisma.storeLink.findMany({ where: { gameId: game.id } }),
+    ]);
+
+    const needsDetail = !game.description;
+    const needsStores = storeLinks.length === 0;
+
+    if (needsDetail || needsStores) {
+      try {
+        const detail = needsDetail
+          ? await rawgProvider.getGame(game.providerGameId)
+          : null;
+        if (needsDetail && detail) {
+          await prisma.game.update({
+            where: { id: game.id },
+            data: {
+              description: detail.description ?? game.description,
+              websiteUrl: detail.websiteUrl ?? game.websiteUrl,
+              backgroundUrl: detail.backgroundUrl ?? game.backgroundUrl,
+            },
+          });
+        }
+        if (needsStores) {
+          const stores =
+            detail?.stores && detail.stores.length > 0
+              ? detail.stores
+              : await rawgProvider.getStores!(game.providerGameId);
+          if (stores.length > 0) {
+            await prisma.$transaction(
+              stores.map((s) =>
+                prisma.storeLink.upsert({
+                  where: {
+                    gameId_provider: { gameId: game.id, provider: s.provider },
+                  },
+                  update: { url: s.url },
+                  create: { gameId: game.id, provider: s.provider, url: s.url },
+                }),
+              ),
+            );
+          }
         }
         return prisma.game.findUnique({ where: { id: game.id } });
+      } catch {
+        // si RAWG falla, servimos lo que tengamos en local
       }
-    } catch {
-      // si RAWG falla, servimos lo que tengamos en local
     }
   }
   return game;
