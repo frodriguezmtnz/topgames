@@ -22,13 +22,16 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       // Next.js inyecta scripts inline (theme + runtime); el SVG del logo usa data:.
-      // 'unsafe-eval' SOLO en dev: React lo usa para debug (error stacks). No va en prod.
-      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+      // 'unsafe-eval' y va.vercel-scripts.com SOLO en dev: React usa eval para debug
+      // (error stacks), y @vercel/analytics carga en dev el script debug externo
+      // (en prod usa /_vercel/insights/script.js, mismo origen). No van en prod.
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval' https://va.vercel-scripts.com" : ""}`,
       "style-src 'self' 'unsafe-inline'",
-      // Portadas y assets vienen de hosts externos (Steam CDN, etc).
+      // Portadas y backgrounds vienen de la CDN de RAWG.
       "img-src 'self' data: blob: https:",
-      // SWR (fetch /api/*) y beacons de Vercel Analytics.
-      "connect-src 'self' https://*.vercel-analytics.com https://*.vercel-insights.com",
+      // SWR (fetch /api/*) y beacons de Vercel Analytics (en dev, el debug script
+      // envia eventos a va.vercel-scripts.com).
+      `connect-src 'self' https://*.vercel-analytics.com https://*.vercel-insights.com${isDev ? " https://va.vercel-scripts.com" : ""}`,
       "font-src 'self'",
       "object-src 'none'",
       "base-uri 'self'",
