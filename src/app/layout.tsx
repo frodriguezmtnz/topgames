@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -51,13 +52,14 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      {/* Script inline del tema: en un Server Component viaja tal cual en el HTML
-          del SSR (corre antes del paint) y React no lo re-renderiza en cliente,
-          evitando el warning de next/script con dangerouslySetInnerHTML. */}
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
       <body className="flex min-h-full flex-col bg-neutral-950 text-neutral-100">
+        {/* Script inline del tema via next/script con beforeInteractive: debe ir
+            DENTRO de <body> (hijo de <html> es HTML invalido -> hydration error).
+            Next lo inyecta en el HTML inicial del servidor y corre antes de hidratar,
+            evitando el flash de tema. */}
+        <Script id="theme-init" strategy="beforeInteractive">
+          {themeScript}
+        </Script>
         <header className="mx-auto flex w-full max-w-3xl items-center justify-between px-5 pt-6 text-sm">
           <Link href="/" className="flex items-center gap-1.5 font-semibold text-neutral-200 hover:text-neutral-100">
             <svg
